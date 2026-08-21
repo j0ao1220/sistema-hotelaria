@@ -6,7 +6,7 @@ Sistema web desenvolvido para auxiliar no gerenciamento das operações de um ho
 
 ## Projeto
 
-Projeto acadêmico desenvolvido pela equipe [NOME DA EQUIPE] para a disciplina de Programação Web.
+Projeto acadêmico desenvolvido pela equipe Kernel para a disciplina de Programação Web.
 
 ## Status
 
