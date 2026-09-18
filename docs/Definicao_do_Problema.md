@@ -4,7 +4,7 @@
 
 > **Documento de Levantamento de Problemas a Ser Analisados e Eventuais Impactos e Riscos ao Negócio**
 >
-> **Preparado para:** [Nome do Hotel / Cliente]
+> **Preparado para:** Projeto Hotel Rio Madeira
 > **Data:** agosto de 2026
 
 ---
