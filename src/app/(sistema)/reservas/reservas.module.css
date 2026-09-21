@@ -1,0 +1,768 @@
+/* =========================
+   PÁGINA
+========================= */
+
+.page {
+  min-height: 100vh;
+  background: #f5f7f9;
+  color: #20252b;
+  font-family: Arial, sans-serif;
+}
+
+
+/* =========================
+   TOPO
+========================= */
+
+.topbar {
+  height: 65px;
+  background: #ffffff;
+  border-bottom: 1px solid #dfe3e6;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 30px;
+  box-sizing: border-box;
+}
+
+.hotel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 15px;
+}
+
+.hotel strong {
+  color: #20252b;
+}
+
+.search {
+  width: 280px;
+
+  background: #f5f6f8;
+  border: 1px solid #e0e3e6;
+  border-radius: 6px;
+
+  padding: 10px 14px;
+
+  color: #777;
+  font-size: 12px;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  font-size: 16px;
+}
+
+.user div {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+
+.user strong {
+  font-size: 13px;
+}
+
+.user span {
+  font-size: 10px;
+  color: #777;
+}
+
+
+/* =========================
+   CABEÇALHO DA PÁGINA
+========================= */
+
+.pageHeader {
+  background: #ffffff;
+
+  padding: 28px 40px 24px;
+
+  border-bottom: 1px solid #ddd;
+}
+
+.breadcrumb {
+  color: #777;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.pageHeader h1 {
+  margin: 0;
+
+  font-size: 30px;
+  font-family: Georgia, serif;
+
+  color: #20252b;
+}
+
+.pageHeader p {
+  margin: 6px 0 0;
+
+  color: #777;
+  font-size: 13px;
+}
+
+
+/* =========================
+   CONTEÚDO
+========================= */
+
+.content {
+  max-width: 1050px;
+
+  margin: 24px auto;
+  padding: 0 20px;
+
+  box-sizing: border-box;
+}
+
+.leftColumn {
+  width: 100%;
+}
+
+
+/* =========================
+   CARD
+========================= */
+
+.card {
+  background: #ffffff;
+
+  border: 1px solid #e2e5e8;
+  border-radius: 8px;
+
+  padding: 22px;
+
+  margin-bottom: 22px;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================
+   TÍTULO DAS SEÇÕES
+========================= */
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 20px;
+}
+
+.icon {
+  width: 34px;
+  height: 34px;
+
+  background: #e6f6ff;
+
+  border-radius: 6px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 17px;
+}
+
+.sectionTitle h2 {
+  margin: 0;
+
+  font-size: 18px;
+  font-weight: 600;
+
+  color: #20252b;
+}
+
+.sectionTitle p {
+  margin: 3px 0 0;
+
+  font-size: 11px;
+  color: #888;
+}
+
+
+/* =========================
+   HÓSPEDE
+========================= */
+
+.guestSearch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.guestSearch input {
+  flex: 1;
+
+  height: 40px;
+
+  box-sizing: border-box;
+
+  padding: 0 12px;
+
+  border: 1px solid #d5dce0;
+  border-radius: 6px;
+
+  background: #f8f9fa;
+
+  font-size: 13px;
+  color: #333;
+
+  outline: none;
+}
+
+.guestSearch input:focus {
+  border-color: #16a5e5;
+  background: #ffffff;
+}
+
+.guestSearch input::placeholder {
+  color: #999;
+}
+
+.registerButton {
+  height: 40px;
+
+  padding: 0 16px;
+
+  border: 1px solid #d5dce0;
+  border-radius: 6px;
+
+  background: #f1f3f5;
+
+  color: #333;
+
+  font-size: 12px;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+}
+
+.registerButton:hover {
+  background: #e6e9ec;
+}
+
+
+/* =========================
+   HÓSPEDE CADASTRADO
+========================= */
+
+.guestSelected {
+  width: 100%;
+  min-height: 60px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  box-sizing: border-box;
+
+  padding: 10px 12px;
+
+  background: #f4fbff;
+
+  border: 1px solid #bfe8fa;
+  border-radius: 6px;
+}
+
+.guestSelected > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.guestSelected strong {
+  font-size: 13px;
+  color: #20252b;
+}
+
+.guestSelected span,
+.guestSelected small {
+  color: #777;
+  font-size: 10px;
+}
+
+.guestSelected button {
+  padding: 7px 12px;
+
+  border: 1px solid #d5dce0;
+  border-radius: 5px;
+
+  background: #ffffff;
+
+  color: #555;
+
+  cursor: pointer;
+}
+
+.guestSelected button:hover {
+  background: #f0f2f4;
+}
+
+
+/* =========================
+   CAMPOS
+========================= */
+
+.fields {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+
+  gap: 16px;
+}
+
+.fields > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.fieldLabel {
+  display: block;
+
+  margin-bottom: 7px;
+
+  font-size: 12px;
+  color: #333;
+}
+
+.fields input,
+.fields select {
+  width: 100%;
+  height: 38px;
+
+  padding: 0 10px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d5dce0;
+  border-radius: 6px;
+
+  background: #f8f9fa;
+
+  font-size: 12px;
+  color: #333;
+
+  outline: none;
+}
+
+.fields input:focus,
+.fields select:focus {
+  border-color: #16a5e5;
+  background: #ffffff;
+}
+
+
+/* =========================
+   QUARTOS
+========================= */
+
+.rooms {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 12px;
+}
+
+.roomCard {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #d5dce0;
+  border-radius: 7px;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  font-family: Arial, sans-serif;
+  transition: 0.2s;
+}
+
+.roomCard:hover {
+  border-color: #16a5e5;
+  background: #fafdff;
+}
+
+.roomImage {
+  width: 75px;
+  height: 75px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+}
+
+.roomInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.roomTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.roomTop strong {
+  font-size: 12px;
+  color: #20252b;
+}
+
+.roomTop span {
+  color: #009fe3;
+
+  font-size: 12px;
+  font-weight: bold;
+
+  white-space: nowrap;
+}
+
+.roomInfo p {
+  margin: 5px 0 8px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #888;
+}
+
+.roomInfo small {
+  display: inline-block;
+  padding: 4px 7px;
+  border-radius: 4px;
+  background: #d8f5e6;
+  color: #16834b;
+  font-size: 8px;
+  font-weight: bold;
+}
+
+
+/* =========================
+   OBSERVAÇÕES
+========================= */
+
+.card textarea {
+  width: 100%;
+  min-height: 100px;
+
+  box-sizing: border-box;
+
+  padding: 12px;
+
+  border: 1px solid #d5dce0;
+  border-radius: 6px;
+
+  background: #f8f9fa;
+
+  font-family: Arial, sans-serif;
+
+  font-size: 12px;
+
+  color: #333;
+
+  resize: vertical;
+
+  outline: none;
+}
+
+.card textarea:focus {
+  border-color: #16a5e5;
+  background: #ffffff;
+}
+
+.card textarea::placeholder {
+  color: #999;
+}
+
+
+/* =========================
+   BOTÕES
+========================= */
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 12px;
+
+  padding: 18px 0 30px;
+}
+
+.cancelButton,
+.reserveButton {
+  height: 42px;
+
+  padding: 0 22px;
+
+  border-radius: 6px;
+
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+.cancelButton {
+  border: 1px solid #d5dce0;
+
+  background: #ffffff;
+
+  color: #666;
+}
+
+.cancelButton:hover {
+  background: #f2f3f4;
+}
+
+.reserveButton {
+  border: none;
+
+  background: #0ba3e6;
+
+  color: #ffffff;
+
+  font-weight: bold;
+}
+
+.reserveButton:hover {
+  background: #078fc9;
+}
+
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+@media (max-width: 900px) {
+
+  .topbar {
+    padding: 0 15px;
+  }
+
+  .search {
+    width: 200px;
+  }
+
+  .content {
+    padding: 0 15px;
+  }
+
+  .fields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+}
+
+
+@media (max-width: 650px) {
+
+  .topbar {
+    height: auto;
+
+    padding: 12px;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+  }
+
+  .search {
+    order: 3;
+
+    width: 100%;
+  }
+
+  .pageHeader {
+    padding: 20px;
+  }
+
+  .pageHeader h1 {
+    font-size: 24px;
+  }
+
+  .content {
+    margin-top: 15px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .guestSearch {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .guestSearch input,
+  .registerButton {
+    width: 100%;
+  }
+
+  .guestSelected {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .rooms {
+    grid-template-columns: 1fr;
+  }
+
+  .roomCard {
+    width: 100%;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .cancelButton,
+  .reserveButton {
+    width: 100%;
+  }
+
+}
+
+.searchGuestWrapper {
+  position: relative;
+  flex: 1;
+}
+
+.searchGuestWrapper input {
+  width: 100%;
+  height: 48px;
+
+  box-sizing: border-box;
+
+  padding: 0 14px;
+
+  border: 1px solid #d6dbe0;
+  border-radius: 6px;
+
+  background: #ffffff;
+  color: #444;
+
+  font-size: 13px;
+  outline: none;
+}
+
+.searchGuestWrapper input:focus {
+  border-color: #079fe8;
+}
+
+.guestResults {
+  position: absolute;
+
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+
+  background: #ffffff;
+
+  border: 1px solid #dfe3e7;
+  border-radius: 6px;
+
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.10);
+
+  overflow: hidden;
+
+  z-index: 50;
+}
+
+.guestOption {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 4px;
+
+  padding: 12px 14px;
+
+  background: #ffffff;
+
+  border: none;
+  border-bottom: 1px solid #eceff1;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.guestOption:hover {
+  background: #f5f8fa;
+}
+
+.guestOption strong {
+  color: #30343a;
+  font-size: 13px;
+}
+
+.guestOption span {
+  color: #969ba1;
+  font-size: 10px;
+}
+
+.guestNoResult {
+  padding: 14px;
+
+  color: #969ba1;
+
+  font-size: 11px;
+}
+
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.backButton,
+.advanceButton {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.backButton {
+  border: 1px solid #d7dce0;
+  background: #ffffff;
+  color: #666666;
+}
+
+.advanceButton {
+  margin-left: auto;
+  border: none;
+  background: #079fe8;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.advanceButton:hover {
+  background: #078dce;
+}

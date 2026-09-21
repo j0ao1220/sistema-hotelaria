@@ -1,0 +1,89 @@
+.sistema {
+  min-height: 100vh;
+  display: flex;
+  background: #f5f7fa;
+}
+
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: #022b43;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+.logo {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.logo:first-letter {
+  font-size: 22px;
+}
+
+.menu {
+  padding: 18px 10px;
+}
+
+.menuItem {
+  display: block;
+  padding: 12px 14px;
+  margin-bottom: 5px;
+  border-radius: 6px;
+  color: #c5d4dd;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.menuItem:hover {
+  background: #074b6d;
+  color: white;
+}
+
+.menuItem.ativo {
+  background: #075277;
+  color: white;
+}
+
+.menuBottom {
+  margin-top: auto;
+  padding: 15px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.conteudo {
+  width: calc(100% - 220px);
+  margin-left: 220px;
+  min-height: 100vh;
+}
+
+@media (max-width: 700px) {
+  .sidebar {
+    width: 70px;
+  }
+
+  .logo span,
+  .menuItem {
+    font-size: 0;
+  }
+
+  .menuItem {
+    text-align: center;
+  }
+
+  .conteudo {
+    width: calc(100% - 70px);
+    margin-left: 70px;
+  }
+}/* akilla - modifiquei o codigo

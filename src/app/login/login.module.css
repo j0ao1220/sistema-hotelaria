@@ -1,0 +1,305 @@
+.container {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #f7f8fa;
+  font-family: Arial, sans-serif;
+  color: #20252b;
+}
+
+.loginSide {
+  display: flex;
+  flex-direction: column;
+  padding: 45px 9%;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 70px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #0798e6;
+  font-size: 21px;
+  font-weight: bold;
+}
+
+.language {
+  color: #737b84;
+  font-size: 13px;
+}
+
+.loginContent {
+  width: 100%;
+  max-width: 440px;
+  margin: auto;
+}
+
+.loginContent h1 {
+  font-family: Georgia, serif;
+  font-size: 34px;
+  margin-bottom: 12px;
+}
+
+.description {
+  color: #858d96;
+  line-height: 1.5;
+  font-size: 14px;
+  margin-bottom: 45px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form label,
+.passwordLabel label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form input[type="text"],
+.form input[type="password"] {
+  height: 48px;
+  border: 1px solid #d6dbe0;
+  border-radius: 7px;
+  padding: 0 14px;
+  font-size: 14px;
+  background: white;
+  box-sizing: border-box;
+}
+
+.form input::placeholder {
+  color: #9aa1a8;
+}
+
+.passwordLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.passwordLabel a {
+  color: #078fe4;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #7d858e;
+  margin: 12px 0;
+  font-weight: normal !important;
+}
+
+.checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0798e6;
+}
+
+.loginButton {
+  height: 50px;
+  border: none;
+  border-radius: 7px;
+  background: #079be8;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.loginButton:hover {
+  background: #078bd1;
+}
+
+.helpBox {
+  display: flex;
+  gap: 15px;
+  border: 1px solid #d7dce1;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 45px;
+  color: #737b84;
+}
+
+.helpIcon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #cfd6dc;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0798e6;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.helpBox strong {
+  color: #30363d;
+  font-size: 13px;
+}
+
+.helpBox p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 8px 0 0;
+}
+
+.footer {
+  display: flex;
+  gap: 18px;
+  color: #9ca3aa;
+  font-size: 11px;
+  border-top: 1px solid #dfe3e7;
+  padding-top: 20px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+
+/* LADO DIREITO */
+
+.imageSide {
+  position: relative;
+  min-height: 100vh;
+  background-image: url("/hotel-login.jpg");
+  background-size: cover;
+  background-position: center;
+  color: white;
+  overflow: hidden;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 32, 50, 0.72);
+}
+
+.presentation {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 70px 12%;
+  box-sizing: border-box;
+}
+
+.secure {
+  width: fit-content;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.presentation h2 {
+  font-family: Georgia, serif;
+  font-size: 43px;
+  line-height: 1.1;
+  margin: 0 0 20px;
+}
+
+.presentation > p {
+  color: #d5e0e7;
+  font-size: 18px;
+  line-height: 1.5;
+  max-width: 600px;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 30px;
+  padding-top: 30px;
+  font-size: 13px;
+  color: #e0e8ed;
+}
+
+.testimonial {
+  background: rgba(2, 43, 67, 0.85);
+  padding: 22px;
+  border-radius: 9px;
+  max-width: 390px;
+  margin-top: 50px;
+}
+
+.stars {
+  color: #ff9b70;
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+}
+
+.testimonial p {
+  font-size: 12px;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.testimonial strong {
+  display: block;
+  font-size: 12px;
+}
+
+.testimonial small {
+  color: #b6c8d3;
+  font-size: 10px;
+}
+
+
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .imageSide {
+    display: none;
+  }
+
+  .loginSide {
+    padding: 30px 8%;
+  }
+
+  .loginContent {
+    margin: 40px auto;
+  }
+}
+
+@media (max-width: 500px) {
+  .header {
+    margin-bottom: 35px;
+  }
+
+  .language {
+    display: none;
+  }
+
+  .loginContent h1 {
+    font-size: 28px;
+  }
+
+  .footer {
+    gap: 10px;
+  }
+}
