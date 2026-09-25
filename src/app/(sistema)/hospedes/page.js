@@ -1,216 +1,148 @@
 "use client";
-
+ 
 import { useState } from "react";
-import Link from "next/link";
-import styles from "./cadastrados.module.css";
-
-export default function HospedesCadastrados() {
-  const [hospedes] = useState(() => {
-    if (typeof window === "undefined") {
-      return [];
-    }
-
-    const dados = sessionStorage.getItem("hospedes");
-
-    return dados ? JSON.parse(dados) : [];
-  });
-
+import { useRouter } from "next/navigation";
+import styles from "./hospedes.module.css";
+ 
+/* ---------- Ícones (SVG inline) ---------- */
+const Icon = ({ children, size = 15 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {children}
+  </svg>
+);
+ 
+const icons = {
+  search: <Icon size={14}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></Icon>,
+  plus: <Icon size={14}><path d="M12 5v14M5 12h14" /></Icon>,
+  user: <Icon size={14}><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a7 7 0 0 1 14 0v1" /></Icon>,
+  eye: (
+    <Icon size={14}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </Icon>
+  ),
+};
+ 
+/* ---------- Dados ---------- */
+const hospedes = [
+  {
+    nome: "joao",
+    cpf: "341.984.561-50",
+    telefone: "3611986021",
+    email: "joao@email.com",
+  },
+];
+ 
+/* ---------- Página ---------- */
+export default function Hospedes() {
+  const router = useRouter();
   const [busca, setBusca] = useState("");
-
-  const hospedesFiltrados = hospedes.filter((hospede) =>
-    hospede.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    hospede.cpf.includes(busca) ||
-    hospede.email.toLowerCase().includes(busca.toLowerCase())
-  );
-
+ 
+  const termo = busca.trim().toLowerCase();
+  const somenteNumeros = termo.replace(/\D/g, "");
+ 
+  const filtrados = hospedes.filter((h) => {
+    if (!termo) return true;
+    return (
+      h.nome.toLowerCase().includes(termo) ||
+      h.email.toLowerCase().includes(termo) ||
+      (somenteNumeros && h.cpf.replace(/\D/g, "").includes(somenteNumeros))
+    );
+  });
+ 
   return (
-    <div className={styles.page}>
-
-      {/* TOPO */}
+    <>
+      {/* BARRA SUPERIOR */}
       <header className={styles.topbar}>
-
-        <div className={styles.hotel}>
-          <span className={styles.hotelIcon}>🏨</span>
-          <strong>Hotel Grand Plaza</strong>
-          <span className={styles.topDivider}>
-            / Central de Reservas
-          </span>
+        <span className={styles.topbarTitle}>Hotel Grand Plaza / Central de Reservas</span>
+        <div className={styles.topbarUser}>
+          <span>Admin Panel</span>
+          <div className={styles.avatar} />
         </div>
-
-        <div className={styles.userArea}>
-          <span className={styles.notification}>🔔</span>
-
-          <div className={styles.userInfo}>
-            <strong>Carlos Mendes</strong>
-            <span>Gerente de Turno</span>
-          </div>
-
-          <div className={styles.userAvatar}>
-            👤
-          </div>
-
-          <span className={styles.arrow}>⌄</span>
-        </div>
-
       </header>
-
-
+ 
       {/* CABEÇALHO */}
-      <section className={styles.hero}>
-
-        <div className={styles.breadcrumb}>
-          🏠
-          <span>›</span>
-          <span>Hóspedes</span>
-          <span>›</span>
-          <strong>Cadastrados</strong>
-        </div>
-
-        <h1>Hóspedes Cadastrados</h1>
-
-        <p>
-          Consulte os hóspedes cadastrados no sistema do hotel.
-        </p>
-
+      <section className={styles.banner}>
+        <span className={styles.breadcrumb}>Hóspedes &gt; Cadastrados</span>
+        <h1 className={styles.bannerTitle}>Hóspedes Cadastrados</h1>
+        <p className={styles.bannerText}>Consulte os hóspedes cadastrados no sistema do hotel.</p>
       </section>
-
-
+ 
       {/* CONTEÚDO */}
-      <main className={styles.content}>
-
+      <div className={styles.content}>
         <section className={styles.card}>
-
-          {/* CABEÇALHO DO CARD */}
           <div className={styles.cardHeader}>
-
             <div>
-              <h2>Lista de Hóspedes</h2>
-
-              <p>
+              <h2 className={styles.cardTitle}>Lista de Hóspedes</h2>
+              <p className={styles.cardSubtitle}>
                 Visualize as informações dos hóspedes cadastrados
               </p>
             </div>
-
-            <Link
-              href="/hospedes/novo"
-                className={styles.newButton}
+ 
+            <button
+              type="button"
+              className={styles.newButton}
+              onClick={() => router.push("/hospedes/novo")}
             >
-                  + Novo cadastro
-            </Link>
-
+              {icons.plus}
+              Novo Cadastro
+            </button>
           </div>
-
-
-          {/* BUSCA */}
-          <div className={styles.toolbar}>
-
-            <div className={styles.searchBox}>
-              <span>🔍</span>
-
-              <input
-                type="text"
-                placeholder="Buscar por nome, CPF ou e-mail..."
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-              />
-            </div>
-
-            <div className={styles.total}>
-              Total: <strong>{hospedes.length}</strong>
-            </div>
-
-          </div>
-
-
-          {/* LISTA */}
-          <div className={styles.list}>
-
-            {hospedesFiltrados.length === 0 ? (
-
-              <div className={styles.empty}>
-                <div className={styles.emptyIcon}>
-                  👤
+ 
+          <label className={styles.searchBox}>
+            {icons.search}
+            <input
+              type="text"
+              placeholder="Buscar por nome, CPF ou e-mail..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </label>
+ 
+          <div className={styles.guestList}>
+            {filtrados.map((hospede) => (
+              <div className={styles.guestRow} key={hospede.cpf}>
+                <div className={styles.guestAvatar}>{icons.user}</div>
+ 
+                <strong className={styles.guestName}>{hospede.nome}</strong>
+ 
+                <div className={styles.guestInfo}>
+                  <span>
+                    <strong>CPF:</strong> {hospede.cpf}
+                  </span>
+                  <span>
+                    <strong>Telefone:</strong> {hospede.telefone}
+                  </span>
+                  <span>
+                    <strong>E-mail:</strong> {hospede.email}
+                  </span>
                 </div>
-
-                <h3>
-                  {hospedes.length === 0
-                    ? "Nenhum hóspede cadastrado"
-                    : "Nenhum resultado encontrado"}
-                </h3>
-
-                <p>
-                  {hospedes.length === 0
-                    ? "Cadastre um novo hóspede para começar."
-                    : "Tente pesquisar utilizando outro nome, CPF ou e-mail."}
-                </p>
-
-              </div>
-
-            ) : (
-
-              hospedesFiltrados.map((hospede) => (
-
-                <article
-                  className={styles.hospede}
-                  key={hospede.id}
+ 
+                <button
+                  type="button"
+                  className={styles.viewButton}
+                  aria-label={`Ver detalhes de ${hospede.nome}`}
                 >
-
-                  <div className={styles.avatar}>
-                    👤
-                  </div>
-
-
-                  <div className={styles.info}>
-
-                    <h3>{hospede.nome}</h3>
-
-                    <div className={styles.details}>
-
-                      <span>
-                        <strong>CPF:</strong>{" "}
-                        {hospede.cpf}
-                      </span>
-
-                      <span>
-                        <strong>Telefone:</strong>{" "}
-                        {hospede.telefone}
-                      </span>
-
-                      <span>
-                        <strong>E-mail:</strong>{" "}
-                        {hospede.email}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-
-                  <button
-                    type="button"
-                    className={styles.detailsButton}
-                  >
-                    Ver dados
-                  </button>
-
-                </article>
-
-              ))
-
+                  {icons.eye}
+                </button>
+              </div>
+            ))}
+ 
+            {filtrados.length === 0 && (
+              <p className={styles.empty}>Nenhum hóspede encontrado.</p>
             )}
-
           </div>
-
         </section>
-
-      </main>
-
-
-      {/* RODAPÉ */}
-      <footer className={styles.footer}>
-        HotelPro Admin v4.2.0 • Sistema de Gestão Hoteleira Profissional
-      </footer>
-
-    </div>
+      </div>
+    </>
   );
 }

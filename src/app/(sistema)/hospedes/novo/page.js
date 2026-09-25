@@ -1,516 +1,414 @@
 "use client";
-
+ 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import styles from "./hospedes.module.css";
-
+import styles from "./novo.module.css";
+ 
+/* ---------- Ícones (SVG inline) ---------- */
+const Icon = ({ children, size = 15 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {children}
+  </svg>
+);
+ 
+const icons = {
+  user: <Icon><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a7 7 0 0 1 14 0v1" /></Icon>,
+  pin: (
+    <Icon>
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
+    </Icon>
+  ),
+  file: (
+    <Icon>
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+    </Icon>
+  ),
+  search: <Icon size={14}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></Icon>,
+};
+ 
+const estados = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA",
+  "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+];
+ 
+/* ---------- Máscaras ---------- */
+const soNumeros = (v) => v.replace(/\D/g, "");
+ 
+const mascaraCPF = (v) =>
+  soNumeros(v)
+    .slice(0, 11)
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+ 
+const mascaraTelefone = (v) => {
+  const n = soNumeros(v).slice(0, 11);
+  if (n.length <= 10) return n.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{4})(\d)/, "$1-$2");
+  return n.replace(/(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
+};
+ 
+const mascaraCEP = (v) => soNumeros(v).slice(0, 8).replace(/(\d{5})(\d)/, "$1-$2");
+ 
+/* ---------- Estado inicial ---------- */
+const formularioVazio = {
+  nome: "",
+  cpf: "",
+  nascimento: "",
+  genero: "",
+  nacionalidade: "",
+  email: "",
+  telefone: "",
+  documento: "",
+  cep: "",
+  rua: "",
+  numero: "",
+  complemento: "",
+  bairro: "",
+  cidade: "",
+  estado: "",
+  observacoes: "",
+};
+ 
+/* ---------- Página ---------- */
 export default function CadastroHospede() {
   const router = useRouter();
-
- const salvarCadastro = () => {
-  const nome = document.getElementById("nome").value;
-  const cpf = document.getElementById("cpf").value;
-  const email = document.getElementById("email").value;
-  const telefone = document.getElementById("telefone").value;
-
-  const novoHospede = {
-    id: Date.now(),
-    nome,
-    cpf,
-    email,
-    telefone,
+  const [form, setForm] = useState(formularioVazio);
+  const [buscandoCep, setBuscandoCep] = useState(false);
+ 
+  const atualizar = (campo, mascara) => (e) => {
+    const valor = mascara ? mascara(e.target.value) : e.target.value;
+    setForm((f) => ({ ...f, [campo]: valor }));
   };
-
-  const hospedesSalvos =
-    JSON.parse(sessionStorage.getItem("hospedes")) || [];
-
-  hospedesSalvos.push(novoHospede);
-
-  sessionStorage.setItem(
-    "hospedes",
-    JSON.stringify(hospedesSalvos)
-  );
-
-  router.push("/hospedes");
-};
-
+ 
+  const buscarCep = async () => {
+    const cep = soNumeros(form.cep);
+    if (cep.length !== 8) {
+      alert("Digite um CEP com 8 números.");
+      return;
+    }
+ 
+    setBuscandoCep(true);
+    try {
+      const resposta = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const dados = await resposta.json();
+ 
+      if (dados.erro) {
+        alert("CEP não encontrado.");
+        return;
+      }
+ 
+      setForm((f) => ({
+        ...f,
+        rua: dados.logradouro || f.rua,
+        bairro: dados.bairro || f.bairro,
+        cidade: dados.localidade || f.cidade,
+        estado: dados.uf || f.estado,
+      }));
+    } catch {
+      alert("Não foi possível consultar o CEP agora.");
+    } finally {
+      setBuscandoCep(false);
+    }
+  };
+ 
+  const salvarCadastro = (e) => {
+    e.preventDefault();
+ 
+    const novoHospede = { id: Date.now(), ...form };
+ 
+    const hospedesSalvos = JSON.parse(sessionStorage.getItem("hospedes")) || [];
+    hospedesSalvos.push(novoHospede);
+    sessionStorage.setItem("hospedes", JSON.stringify(hospedesSalvos));
+ 
+    alert("Cadastro salvo com sucesso!");
+    router.push("/hospedes");
+  };
+ 
   return (
-    <div className={styles.page}>
-
-      {/* TOPO */}
+    <>
+      {/* BARRA SUPERIOR */}
       <header className={styles.topbar}>
-
-        <div className={styles.hotel}>
-          <span className={styles.hotelIcon}>🏨</span>
-          <strong>Hotel Grand Plaza</strong>
-          <span className={styles.topDivider}>/ Central de Reservas</span>
+        <span className={styles.topbarTitle}>Hotel Grand Plaza / Central de Reservas</span>
+        <div className={styles.topbarUser}>
+          <span>Admin Panel</span>
+          <div className={styles.avatar} />
         </div>
-
-        <div className={styles.search}>
-          <span>🔍</span>
-          <span>Buscar hóspedes, quartos...</span>
-        </div>
-
-        <div className={styles.userArea}>
-
-          <span className={styles.notification}>🔔</span>
-
-          <div className={styles.userInfo}>
-            <strong>Carlos Mendes</strong>
-            <span>Gerente de Turno</span>
-          </div>
-
-          <div className={styles.userAvatar}>
-            👤
-          </div>
-
-          <span className={styles.arrow}>⌄</span>
-
-        </div>
-
       </header>
-
-
+ 
       {/* CABEÇALHO */}
-      <section className={styles.hero}>
-
-        <div className={styles.breadcrumb}>
-          🏠
-          <span>›</span>
-          <span>Reserva</span>
-          <span>›</span>
-          <span>Nova Reserva</span>
-          <span>›</span>
-          <strong>Hóspedes</strong>
-        </div>
-
-        <h1>Novo Cadastro de Hóspede</h1>
-
-        <p>
+      <section className={styles.banner}>
+        <span className={styles.breadcrumb}>Reserva &gt; Nova Reserva &gt; Hóspedes</span>
+        <h1 className={styles.bannerTitle}>Novo Cadastro de Hóspede</h1>
+        <p className={styles.bannerText}>
           Preencha as informações detalhadas para o check-in do novo cliente.
         </p>
-
       </section>
-
-
-      {/* CONTEÚDO PRINCIPAL */}
-      <div className={styles.content}>
-
-        {/* COLUNA PRINCIPAL */}
-        <div className={styles.mainColumn}>
-
-          {/* DADOS PESSOAIS */}
-          <section className={styles.card}>
-
-            <div className={styles.cardHeader}>
-
-              <div className={styles.sectionIcon}>
-                👤
-              </div>
-
-              <div>
-                <h2>Dados Pessoais</h2>
-
-                <p>
-                  Informações de identificação básica do hóspede
-                </p>
-              </div>
-
+ 
+      {/* FORMULÁRIO */}
+      <form className={styles.content} onSubmit={salvarCadastro}>
+        {/* DADOS PESSOAIS */}
+        <section className={styles.card}>
+          <div className={styles.cardHeader}>
+            <span className={styles.sectionIcon}>{icons.user}</span>
+            <div>
+              <h2 className={styles.cardTitle}>Dados Pessoais</h2>
+              <p className={styles.cardSubtitle}>Informações de identificação básica do hóspede</p>
             </div>
-
-
-            <div className={styles.formContent}>
-
-              <div className={`${styles.field} ${styles.largeField}`}>
-                <label className={styles.label}>
-                  Nome Completo <span>*</span>
-                </label>
-
-                <input
-                  id="nome"
-                  className={styles.input}
-                  type="text"
-                  placeholder="Ex: João Silva de Oliveira"
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  CPF <span>*</span>
-                </label>
-
-                <input
-                id="cpf"
-                  className={styles.input}
-                  type="text"
-                  placeholder="000.000.000-00"
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Data de Nascimento
-                </label>
-
-                <input
-                  className={styles.input}
-                  type="date"
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Gênero
-                </label>
-
-                <select className={styles.input}>
-                  <option>Prefiro não informar</option>
-                  <option>Feminino</option>
-                  <option>Masculino</option>
-                  <option>Outro</option>
-                </select>
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Nacionalidade
-                </label>
-
-                <input
-                  className={styles.input}
-                  type="text"
-                  defaultValue="Brasileira"
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  E-mail <span>*</span>
-                </label>
-
-                <input
-                  id="email"
-                  className={styles.input}
-                  type="email"
-                  placeholder="cliente@email.com"
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Telefone <span>*</span>
-                </label>
-
-                <input
-                  id="telefone"
-                  className={styles.input}
-                  type="tel"
-                  placeholder="(00) 00000-0000"
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Documento de Identificação
-                  <span className={styles.labelSecondLine}>
-                    (RG/Passaporte)
-                  </span>
-                </label>
-
-                <input
-                  className={styles.input}
-                  type="text"
-                  placeholder="Número do documento"
-                />
-              </div>
-
-            </div>
-
-          </section>
-
-
-          {/* ENDEREÇO */}
-          <section className={styles.card}>
-
-            <div className={styles.cardHeader}>
-
-              <div className={styles.sectionIcon}>
-                📍
-              </div>
-
-              <div>
-                <h2>Endereço</h2>
-
-                <p>
-                  Localização da residência do hóspede
-                </p>
-              </div>
-
-            </div>
-
-
-            <div className={styles.formContent}>
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  CEP
-                </label>
-
-                <div className={styles.inputWithButton}>
-
-                  <input
-                    className={styles.input}
-                    type="text"
-                    placeholder="00000-000"
-                  />
-
-                  <button
-                    type="button"
-                    className={styles.searchCepButton}
-                  >
-                    🔍
-                  </button>
-
-                </div>
-              </div>
-
-
-              <div className={`${styles.field} ${styles.addressStreet}`}>
-                <label className={styles.label}>
-                  Rua/Avenida
-                </label>
-
-                <input
-                  className={styles.input}
-                  type="text"
-                  placeholder="Logradouro"
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Número
-                </label>
-
-                <input
-                  className={styles.input}
-                  type="text"
-                  placeholder="123"
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Complemento
-                </label>
-
-                <input
-                  className={styles.input}
-                  type="text"
-                  placeholder="Apto, Bloco, etc."
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Bairro
-                </label>
-
-                <input
-                  className={styles.input}
-                  type="text"
-                  placeholder="Nome do bairro"
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Cidade
-                </label>
-
-                <input
-                  className={styles.input}
-                  type="text"
-                  placeholder="Cidade"
-                />
-              </div>
-
-
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Estado
-                </label>
-
-                <select className={styles.input}>
-                  <option>UF</option>
-                  <option>RO</option>
-                  <option>AC</option>
-                  <option>AM</option>
-                  <option>MT</option>
-                  <option>SP</option>
-                  <option>RJ</option>
-                </select>
-              </div>
-
-            </div>
-
-          </section>
-
-
-          {/* OBSERVAÇÕES */}
-          <section className={styles.card}>
-
-            <div className={styles.cardHeader}>
-
-              <div className={styles.sectionIcon}>
-                📄
-              </div>
-
-              <div>
-                <h2>Observações</h2>
-
-                <p>
-                  Notas internas, preferências ou restrições alimentares
-                </p>
-              </div>
-
-            </div>
-
-
-            <div className={styles.observationContent}>
-
-              <label className={styles.label}>
-                Notas Adicionais
-              </label>
-
-              <textarea
-                className={styles.textarea}
-                placeholder="Insira aqui informações relevantes como alergias, preferências de quarto ou histórico do cliente..."
-              />
-
-            </div>
-
-          </section>
-
-
-          {/* BOTÕES */}
-          <div className={styles.actions}>
-
-            <button
-              type="button"
-              className={styles.cancelButton}
-            >
-              × &nbsp; Cancelar
-            </button>
-
-
-            <button
-              type="button"
-              className={styles.clearButton}
-            >
-              ♢ &nbsp; Limpar formulário
-            </button>
-
-
-            <button
-              type="button"
-              className={styles.saveButton}
-              onClick={salvarCadastro}
-            >
-              💾 &nbsp; Salvar cadastro
-            </button>
-
           </div>
-
-        </div>
-
-
-        {/* COLUNA LATERAL */}
-        <aside className={styles.sideColumn}>
-
-          {/* FOTO DO PERFIL */}
-          <section className={styles.profileCard}>
-
-            <h2>Foto do Perfil</h2>
-
-            <div className={styles.profilePhoto}>
-              👤
-
-              <div className={styles.camera}>
-                📷
+ 
+          <div className={styles.gridPessoais}>
+            <div className={`${styles.field} ${styles.span4}`}>
+              <label htmlFor="nome">
+                Nome Completo <span className={styles.required}>*</span>
+              </label>
+              <input
+                id="nome"
+                type="text"
+                placeholder="Ex: João Silva de Oliveira"
+                value={form.nome}
+                onChange={atualizar("nome")}
+                required
+              />
+            </div>
+ 
+            <div className={`${styles.field} ${styles.span2} ${styles.endRow}`}>
+              <label htmlFor="cpf">
+                CPF <span className={styles.required}>*</span>
+              </label>
+              <input
+                id="cpf"
+                type="text"
+                inputMode="numeric"
+                placeholder="000.000.000-00"
+                value={form.cpf}
+                onChange={atualizar("cpf", mascaraCPF)}
+                required
+              />
+            </div>
+ 
+            <div className={`${styles.field} ${styles.span2}`}>
+              <label htmlFor="nascimento">Data de Nascimento</label>
+              <input
+                id="nascimento"
+                type="date"
+                value={form.nascimento}
+                onChange={atualizar("nascimento")}
+              />
+            </div>
+ 
+            <div className={`${styles.field} ${styles.span2}`}>
+              <label htmlFor="genero">Gênero</label>
+              <select id="genero" value={form.genero} onChange={atualizar("genero")}>
+                <option value="">Prefiro não informar</option>
+                <option value="Feminino">Feminino</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+ 
+            <div className={`${styles.field} ${styles.span2} ${styles.endRow}`}>
+              <label htmlFor="nacionalidade">Nacionalidade</label>
+              <input
+                id="nacionalidade"
+                type="text"
+                placeholder="Brasileira"
+                value={form.nacionalidade}
+                onChange={atualizar("nacionalidade")}
+              />
+            </div>
+ 
+            <div className={`${styles.field} ${styles.span3}`}>
+              <label htmlFor="email">
+                E-mail <span className={styles.required}>*</span>
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="cliente@email.com"
+                value={form.email}
+                onChange={atualizar("email")}
+                required
+              />
+            </div>
+ 
+            <div className={`${styles.field} ${styles.span3} ${styles.endRow}`}>
+              <label htmlFor="telefone">
+                Telefone <span className={styles.required}>*</span>
+              </label>
+              <input
+                id="telefone"
+                type="tel"
+                placeholder="(00) 00000-0000"
+                value={form.telefone}
+                onChange={atualizar("telefone", mascaraTelefone)}
+                required
+              />
+            </div>
+ 
+            <div className={`${styles.field} ${styles.span3}`}>
+              <label htmlFor="documento">Documento de Identificação</label>
+              <input
+                id="documento"
+                type="text"
+                placeholder="Número do documento"
+                value={form.documento}
+                onChange={atualizar("documento")}
+              />
+            </div>
+          </div>
+        </section>
+ 
+        {/* ENDEREÇO */}
+        <section className={styles.card}>
+          <div className={styles.cardHeader}>
+            <span className={styles.sectionIcon}>{icons.pin}</span>
+            <div>
+              <h2 className={styles.cardTitle}>Endereço</h2>
+              <p className={styles.cardSubtitle}>Localização da residência do hóspede</p>
+            </div>
+          </div>
+ 
+          <div className={styles.gridEndereco}>
+            <div className={`${styles.field} ${styles.col3}`}>
+              <label htmlFor="cep">CEP</label>
+              <div className={styles.cepGroup}>
+                <input
+                  id="cep"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="00000-000"
+                  value={form.cep}
+                  onChange={atualizar("cep", mascaraCEP)}
+                />
+                <button
+                  type="button"
+                  className={styles.cepButton}
+                  onClick={buscarCep}
+                  disabled={buscandoCep}
+                  aria-label="Buscar CEP"
+                >
+                  {icons.search}
+                </button>
               </div>
             </div>
-
-            <p className={styles.profileHelp}>
-              Clique no ícone para capturar ou fazer upload da foto do documento original.
-            </p>
-
-            <div className={styles.newClient}>
-              ☆ CLIENTE NOVO
+ 
+            <div className={`${styles.field} ${styles.col9}`}>
+              <label htmlFor="rua">Rua/Avenida</label>
+              <input
+                id="rua"
+                type="text"
+                placeholder="Logradouro"
+                value={form.rua}
+                onChange={atualizar("rua")}
+              />
             </div>
-
-          </section>
-
-
-          {/* RESUMO DO SISTEMA */}
-          <section className={styles.systemCard}>
-
-            <h3>
-              ⓘ &nbsp;Resumo do Sistema
-            </h3>
-
-
-            <div className={styles.systemRow}>
-              <span>Status do Cadastro</span>
-              <strong>Incompleto</strong>
+ 
+            <div className={`${styles.field} ${styles.col2}`}>
+              <label htmlFor="numero">Número</label>
+              <input
+                id="numero"
+                type="text"
+                placeholder="123"
+                value={form.numero}
+                onChange={atualizar("numero")}
+              />
             </div>
-
-
-            <div className={styles.systemRow}>
-              <span>Data de Início</span>
-              <strong>24/05/2024</strong>
+ 
+            <div className={`${styles.field} ${styles.col4}`}>
+              <label htmlFor="complemento">Complemento</label>
+              <input
+                id="complemento"
+                type="text"
+                placeholder="Apto, Bloco, etc."
+                value={form.complemento}
+                onChange={atualizar("complemento")}
+              />
             </div>
-
-
-            <div className={styles.systemRow}>
-              <span>Operador</span>
-              <strong>C. Mendes</strong>
+ 
+            <div className={`${styles.field} ${styles.col6}`}>
+              <label htmlFor="bairro">Bairro</label>
+              <input
+                id="bairro"
+                type="text"
+                placeholder="Nome do bairro"
+                value={form.bairro}
+                onChange={atualizar("bairro")}
+              />
             </div>
-
-
-            <div className={styles.systemRow}>
-              <span>Unidade</span>
-              <strong>Grand Plaza</strong>
+ 
+            <div className={`${styles.field} ${styles.col5}`}>
+              <label htmlFor="cidade">Cidade</label>
+              <input
+                id="cidade"
+                type="text"
+                placeholder="Cidade"
+                value={form.cidade}
+                onChange={atualizar("cidade")}
+              />
             </div>
-
-
-            <p className={styles.systemNotice}>
-              * Campos marcados com asterisco são obrigatórios para emissão da
-              Ficha Nacional de Registro de Hóspedes (FNRH).
-            </p>
-
-          </section>
-
-        </aside>
-
-      </div>
-
-
-      {/* RODAPÉ */}
-      <footer className={styles.footer}>
-        HotelPro Admin v4.2.0 • Sistema de Gestão Hoteleira Profissional
-      </footer>
-
-    </div>
+ 
+            <div className={`${styles.field} ${styles.col2}`}>
+              <label htmlFor="estado">Estado</label>
+              <select id="estado" value={form.estado} onChange={atualizar("estado")}>
+                <option value="">UF</option>
+                {estados.map((uf) => (
+                  <option key={uf} value={uf}>
+                    {uf}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </section>
+ 
+        {/* OBSERVAÇÕES */}
+        <section className={styles.card}>
+          <div className={styles.cardHeader}>
+            <span className={styles.sectionIcon}>{icons.file}</span>
+            <div>
+              <h2 className={styles.cardTitle}>Observações</h2>
+              <p className={styles.cardSubtitle}>
+                Notas internas, preferências ou restrições alimentares
+              </p>
+            </div>
+          </div>
+ 
+          <div className={styles.field}>
+            <label htmlFor="observacoes">Notas Adicionais</label>
+            <textarea
+              id="observacoes"
+              placeholder="Escreva informações relevantes como alergias, preferências de quarto ou histórico do cliente..."
+              value={form.observacoes}
+              onChange={atualizar("observacoes")}
+            />
+          </div>
+        </section>
+ 
+        {/* BOTÕES */}
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.cancelButton}
+            onClick={() => router.push("/hospedes")}
+          >
+            Cancelar
+          </button>
+          <button type="submit" className={styles.saveButton}>
+            Salvar Cadastro
+          </button>
+        </div>
+      </form>
+    </>
   );
 }
