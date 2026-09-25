@@ -30,6 +30,6 @@ RN14- Pagamento: O pagamento tem que estar vinculado em uma reserva ou hospedage
 
 RN15- Comprovante: O sistema só irá emitir o comprovante de pagamento após o pagamento ser registrado com sucesso.
 
-# RN16- Histórico: As reservas e os pagamentos que forem realizados devem ficar registrados no histórico do cliente.
+RN16- Histórico: As reservas e os pagamentos que forem realizados devem ficar registrados no histórico do cliente.
 
-# RN17- Relatórios: Os relatórios de ocupação e faturamento devem utilizar exclusivamente os dados registrados no sistema.
+RN17- Relatórios: Os relatórios de ocupação e faturamento devem utilizar exclusivamente os dados registrados no sistema.
