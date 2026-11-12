@@ -1,6 +1,6 @@
 "use client";
  
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./hospedes.module.css";
  
@@ -28,6 +28,20 @@ const icons = {
     <Icon size={14}>
       <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
       <circle cx="12" cy="12" r="3" />
+    </Icon>
+  ),
+  pencil: (
+    <Icon size={14}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
+    </Icon>
+  ),
+  trash: (
+    <Icon size={14}>
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v6M14 11v6" />
     </Icon>
   ),
 };
@@ -99,21 +113,61 @@ const hospedesBase = [
 /* ---------- Página ---------- */
 export default function Hospedes() {
   const router = useRouter();
-  const [hospedes, setHospedes] = useState(hospedesBase);
-  const [busca, setBusca] = useState("");
-  const [hospedeSelecionado, setHospedeSelecionado] = useState(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const [hospedes, setHospedes] = useState(() => {
+    if (typeof window === "undefined") return hospedesBase;
 
     const salvos = JSON.parse(sessionStorage.getItem("hospedes") || "[]");
-    const todos = [...hospedesBase, ...salvos];
-    setHospedes(todos);
-  }, []);
+    return [...hospedesBase, ...salvos];
+  });
+  const [busca, setBusca] = useState("");
+  const [hospedeSelecionado, setHospedeSelecionado] = useState(null);
+  const [hospedeEmEdicao, setHospedeEmEdicao] = useState(null);
 
   const termo = busca.trim().toLowerCase();
   const somenteNumeros = termo.replace(/\D/g, "");
- 
+
+  const salvarHospedesNoStorage = (lista) => {
+    if (typeof window === "undefined") return;
+
+    const salvos = lista.filter((hospede) => !hospedesBase.some((base) => base.cpf === hospede.cpf));
+    sessionStorage.setItem("hospedes", JSON.stringify(salvos));
+  };
+
+  const removerHospede = (cpf) => {
+    const hospede = hospedes.find((item) => item.cpf === cpf);
+    const confirmacao = window.confirm(
+      `Deseja realmente excluir o hóspede ${hospede?.nome || "selecionado"}?`
+    );
+
+    if (!confirmacao) return;
+
+    const proximaLista = hospedes.filter((item) => item.cpf !== cpf);
+    setHospedes(proximaLista);
+    salvarHospedesNoStorage(proximaLista);
+  };
+
+  const abrirEdicao = (hospede) => {
+    setHospedeEmEdicao({ ...hospede });
+  };
+
+  const atualizarEdicao = (campo, valor) => {
+    setHospedeEmEdicao((atual) => ({ ...atual, [campo]: valor }));
+  };
+
+  const salvarEdicao = (event) => {
+    event.preventDefault();
+
+    if (!hospedeEmEdicao) return;
+
+    const proximaLista = hospedes.map((item) =>
+      item.cpf === hospedeEmEdicao.cpf ? { ...item, ...hospedeEmEdicao } : item
+    );
+
+    setHospedes(proximaLista);
+    salvarHospedesNoStorage(proximaLista);
+    setHospedeEmEdicao(null);
+  };
+
   const filtrados = hospedes.filter((h) => {
     if (!termo) return true;
     return (
@@ -191,14 +245,37 @@ export default function Hospedes() {
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  className={styles.viewButton}
-                  aria-label={`Ver detalhes de ${hospede.nome}`}
-                  onClick={() => setHospedeSelecionado(hospede)}
-                >
-                  {icons.eye}
-                </button>
+                <div className={styles.actionGroup}>
+                  <button
+                    type="button"
+                    className={styles.actionButtonPrimary}
+                    aria-label={`Ver detalhes de ${hospede.nome}`}
+                    onClick={() => setHospedeSelecionado(hospede)}
+                  >
+                    {icons.eye}
+                    Visualizar
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.actionButtonSecondary}
+                    aria-label={`Alterar dados de ${hospede.nome}`}
+                    onClick={() => abrirEdicao(hospede)}
+                  >
+                    {icons.pencil}
+                    Alterar
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.actionButtonDanger}
+                    aria-label={`Excluir ${hospede.nome}`}
+                    onClick={() => removerHospede(hospede.cpf)}
+                  >
+                    {icons.trash}
+                    Excluir
+                  </button>
+                </div>
               </div>
             ))}
 
@@ -208,6 +285,184 @@ export default function Hospedes() {
           </div>
         </section>
       </div>
+
+      {hospedeEmEdicao && (
+        <div className={styles.modalOverlay} onClick={() => setHospedeEmEdicao(null)}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className={styles.closeButton}
+              onClick={() => setHospedeEmEdicao(null)}
+              aria-label="Fechar edição do hóspede"
+            >
+              ×
+            </button>
+
+            <div className={styles.modalHeader}>
+              <div className={styles.modalAvatar}>{icons.user}</div>
+              <div>
+                <span className={styles.modalLabel}>Edição</span>
+                <h3 className={styles.modalTitle}>Alterar hóspede</h3>
+              </div>
+            </div>
+
+            <form className={styles.editForm} onSubmit={salvarEdicao}>
+              <div className={styles.editGrid}>
+                <label className={styles.field}>
+                  <span>Nome completo</span>
+                  <input
+                    value={hospedeEmEdicao.nome || ""}
+                    onChange={(event) => atualizarEdicao("nome", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>CPF</span>
+                  <input
+                    value={hospedeEmEdicao.cpf || ""}
+                    onChange={(event) => atualizarEdicao("cpf", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Data de nascimento</span>
+                  <input
+                    value={hospedeEmEdicao.nascimento || ""}
+                    onChange={(event) => atualizarEdicao("nascimento", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Gênero</span>
+                  <input
+                    value={hospedeEmEdicao.genero || ""}
+                    onChange={(event) => atualizarEdicao("genero", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Nacionalidade</span>
+                  <input
+                    value={hospedeEmEdicao.nacionalidade || ""}
+                    onChange={(event) => atualizarEdicao("nacionalidade", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Documento</span>
+                  <input
+                    value={hospedeEmEdicao.documento || ""}
+                    onChange={(event) => atualizarEdicao("documento", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Telefone</span>
+                  <input
+                    value={hospedeEmEdicao.telefone || ""}
+                    onChange={(event) => atualizarEdicao("telefone", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>E-mail</span>
+                  <input
+                    type="email"
+                    value={hospedeEmEdicao.email || ""}
+                    onChange={(event) => atualizarEdicao("email", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>CEP</span>
+                  <input
+                    value={hospedeEmEdicao.cep || ""}
+                    onChange={(event) => atualizarEdicao("cep", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Rua</span>
+                  <input
+                    value={hospedeEmEdicao.rua || ""}
+                    onChange={(event) => atualizarEdicao("rua", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Número</span>
+                  <input
+                    value={hospedeEmEdicao.numero || ""}
+                    onChange={(event) => atualizarEdicao("numero", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Complemento</span>
+                  <input
+                    value={hospedeEmEdicao.complemento || ""}
+                    onChange={(event) => atualizarEdicao("complemento", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Bairro</span>
+                  <input
+                    value={hospedeEmEdicao.bairro || ""}
+                    onChange={(event) => atualizarEdicao("bairro", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Cidade</span>
+                  <input
+                    value={hospedeEmEdicao.cidade || ""}
+                    onChange={(event) => atualizarEdicao("cidade", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Estado</span>
+                  <input
+                    value={hospedeEmEdicao.estado || ""}
+                    onChange={(event) => atualizarEdicao("estado", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Check-in</span>
+                  <input
+                    value={hospedeEmEdicao.checkin || ""}
+                    onChange={(event) => atualizarEdicao("checkin", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Check-out</span>
+                  <input
+                    value={hospedeEmEdicao.checkout || ""}
+                    onChange={(event) => atualizarEdicao("checkout", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Quarto</span>
+                  <input
+                    value={hospedeEmEdicao.quarto || ""}
+                    onChange={(event) => atualizarEdicao("quarto", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Status</span>
+                  <input
+                    value={hospedeEmEdicao.status || ""}
+                    onChange={(event) => atualizarEdicao("status", event.target.value)}
+                  />
+                </label>
+                <label className={`${styles.field} ${styles.fullWidth}`}>
+                  <span>Observações</span>
+                  <textarea
+                    value={hospedeEmEdicao.observacoes || ""}
+                    onChange={(event) => atualizarEdicao("observacoes", event.target.value)}
+                  />
+                </label>
+              </div>
+
+              <div className={styles.modalActions}>
+                <button type="button" className={styles.secondaryAction} onClick={() => setHospedeEmEdicao(null)}>
+                  Cancelar
+                </button>
+                <button type="submit" className={styles.primaryAction}>
+                  Salvar alterações
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {hospedeSelecionado && (
         <div className={styles.modalOverlay} onClick={() => setHospedeSelecionado(null)}>
