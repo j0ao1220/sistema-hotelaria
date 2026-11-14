@@ -90,10 +90,6 @@ export default function Hospedes() {
   };
 
   useEffect(() => { carregarHospedes(); }, []);
-  const [busca, setBusca] = useState("");
-  const [hospedeSelecionado, setHospedeSelecionado] = useState(null);
-  const [hospedeEmEdicao, setHospedeEmEdicao] = useState(null);
-
   const termo = busca.trim().toLowerCase();
   const somenteNumeros = termo.replace(/\D/g, "");
 
