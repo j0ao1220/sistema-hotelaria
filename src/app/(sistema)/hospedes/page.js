@@ -66,30 +66,32 @@ export default function Hospedes() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
-  const carregarHospedes = async () => {
-    try {
-      setErro("");
-      const response = await apiFetch("/api/hospedes");
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Não foi possível carregar os hóspedes.");
-      setHospedes(data.map((item) => ({
-        ...item,
-        acompanhantes: item.acompanhantes || [],
-        telefone: item.telefone || "",
-        email: item.email || "",
-        checkin: "",
-        checkout: "",
-        quarto: "",
-        status: "",
-      })));
-    } catch (error) {
-      setErro(error.message || "Erro ao carregar hóspedes.");
-    } finally {
-      setCarregando(false);
-    }
-  };
+  useEffect(() => {
+    const carregarHospedes = async () => {
+      try {
+        setErro("");
+        const response = await apiFetch("/api/hospedes");
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Não foi possível carregar os hóspedes.");
+        setHospedes(data.map((item) => ({
+          ...item,
+          acompanhantes: item.acompanhantes || [],
+          telefone: item.telefone || "",
+          email: item.email || "",
+          checkin: "",
+          checkout: "",
+          quarto: "",
+          status: "",
+        })));
+      } catch (error) {
+        setErro(error.message || "Erro ao carregar hóspedes.");
+      } finally {
+        setCarregando(false);
+      }
+    };
+    carregarHospedes();
+  }, []);
 
-  useEffect(() => { carregarHospedes(); }, []);
   const termo = busca.trim().toLowerCase();
   const somenteNumeros = termo.replace(/\D/g, "");
 
