@@ -1,6 +1,7 @@
 "use client";
  
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
 import styles from "./hospedes.module.css";
  
@@ -55,78 +56,40 @@ const mascaraCPF = (valor) => {
 };
 
 /* ---------- Dados ---------- */
-const hospedesBase = [
-  {
-    nome: "João Silva",
-    cpf: "341.984.561-50",
-    telefone: "(11) 3611-9802",
-    email: "joao@email.com",
-    checkin: "15/11/2026",
-    checkout: "20/11/2026",
-    quarto: "102",
-    status: "Confirmado",
-    observacoes: "Solicitou cama extra e café da manhã inclusivo.",
-    acompanhantes: [],
-  },
-  {
-    nome: "Maria Souza",
-    cpf: "284.765.912-43",
-    telefone: "(21) 99876-1122",
-    email: "maria@email.com",
-    checkin: "12/11/2026",
-    checkout: "18/11/2026",
-    quarto: "205",
-    status: "Em hospedagem",
-    observacoes: "Viajante frequente, prefere andar alto e quarto silencioso.",
-    acompanhantes: [],
-  },
-  {
-    nome: "Carlos Mendes",
-    cpf: "518.204.761-88",
-    telefone: "(31) 98844-5599",
-    email: "carlos@email.com",
-    checkin: "14/11/2026",
-    checkout: "19/11/2026",
-    quarto: "318",
-    status: "Pré-check-in",
-    observacoes: "Chegada prevista no fim da tarde com veículo próprio.",
-    acompanhantes: [],
-  },
-  {
-    nome: "Ana Paula Rocha",
-    cpf: "712.889.034-90",
-    telefone: "(41) 97653-0088",
-    email: "ana@email.com",
-    checkin: "10/11/2026",
-    checkout: "15/11/2026",
-    quarto: "410",
-    status: "Finalizado",
-    observacoes: "Hóspede repetente, pediu avaliação de limpeza no quarto.",
-    acompanhantes: [],
-  },
-  {
-    nome: "Pedro Almeida",
-    cpf: "125.476.338-55",
-    telefone: "(51) 98421-3677",
-    email: "pedro@email.com",
-    checkin: "16/11/2026",
-    checkout: "22/11/2026",
-    quarto: "507",
-    status: "Confirmado",
-    observacoes: "Solicitou vista para o mar e serviço de quarto no primeiro dia.",
-    acompanhantes: [],
-  },
-];
- 
 /* ---------- Página ---------- */
 export default function Hospedes() {
   const router = useRouter();
-  const [hospedes, setHospedes] = useState(() => {
-    if (typeof window === "undefined") return hospedesBase;
+  const [hospedes, setHospedes] = useState([]);
+  const [busca, setBusca] = useState("");
+  const [hospedeSelecionado, setHospedeSelecionado] = useState(null);
+  const [hospedeEmEdicao, setHospedeEmEdicao] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
 
-    const salvos = JSON.parse(sessionStorage.getItem("hospedes") || "[]");
-    return [...hospedesBase, ...salvos];
-  });
+  const carregarHospedes = async () => {
+    try {
+      setErro("");
+      const response = await apiFetch("/api/hospedes");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Não foi possível carregar os hóspedes.");
+      setHospedes(data.map((item) => ({
+        ...item,
+        acompanhantes: item.acompanhantes || [],
+        telefone: item.telefone || "",
+        email: item.email || "",
+        checkin: "",
+        checkout: "",
+        quarto: "",
+        status: "",
+      })));
+    } catch (error) {
+      setErro(error.message || "Erro ao carregar hóspedes.");
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  useEffect(() => { carregarHospedes(); }, []);
   const [busca, setBusca] = useState("");
   const [hospedeSelecionado, setHospedeSelecionado] = useState(null);
   const [hospedeEmEdicao, setHospedeEmEdicao] = useState(null);
@@ -134,24 +97,18 @@ export default function Hospedes() {
   const termo = busca.trim().toLowerCase();
   const somenteNumeros = termo.replace(/\D/g, "");
 
-  const salvarHospedesNoStorage = (lista) => {
-    if (typeof window === "undefined") return;
-
-    const salvos = lista.filter((hospede) => !hospedesBase.some((base) => base.cpf === hospede.cpf));
-    sessionStorage.setItem("hospedes", JSON.stringify(salvos));
-  };
-
-  const removerHospede = (cpf) => {
-    const hospede = hospedes.find((item) => item.cpf === cpf);
-    const confirmacao = window.confirm(
-      `Deseja realmente excluir o hóspede ${hospede?.nome || "selecionado"}?`
-    );
-
-    if (!confirmacao) return;
-
-    const proximaLista = hospedes.filter((item) => item.cpf !== cpf);
-    setHospedes(proximaLista);
-    salvarHospedesNoStorage(proximaLista);
+  const removerHospede = async (id) => {
+    const hospede = hospedes.find((item) => item.id === id);
+    if (!window.confirm(`Deseja realmente excluir o hóspede ${hospede?.nome || "selecionado"}?`)) return;
+    try {
+      const response = await apiFetch(`/api/hospedes/${id}`, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Não foi possível excluir o hóspede.");
+      setHospedes((atual) => atual.filter((item) => item.id !== id));
+      if (hospedeSelecionado?.id === id) setHospedeSelecionado(null);
+    } catch (error) {
+      alert(error.message || "Erro ao excluir hóspede.");
+    }
   };
 
   const abrirEdicao = (hospede) => {
@@ -190,24 +147,25 @@ export default function Hospedes() {
     }));
   };
 
-  const salvarEdicao = (event) => {
+  const salvarEdicao = async (event) => {
     event.preventDefault();
-
     if (!hospedeEmEdicao) return;
-
-    const acompanhantesValidos = (hospedeEmEdicao.acompanhantes || []).filter(
-      (item) => item?.nome?.trim() || item?.cpf?.trim()
-    );
-
-    const proximaLista = hospedes.map((item) =>
-      item.cpf === hospedeEmEdicao.cpf
-        ? { ...item, ...hospedeEmEdicao, acompanhantes: acompanhantesValidos }
-        : item
-    );
-
-    setHospedes(proximaLista);
-    salvarHospedesNoStorage(proximaLista);
-    setHospedeEmEdicao(null);
+    try {
+      const payload = {
+        ...hospedeEmEdicao,
+        acompanhantes: (hospedeEmEdicao.acompanhantes || []).filter((item) => item?.nome?.trim() || item?.cpf?.trim()),
+      };
+      const response = await apiFetch(`/api/hospedes/${hospedeEmEdicao.id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Não foi possível atualizar o hóspede.");
+      setHospedes((atual) => atual.map((item) => item.id === data.id ? { ...data, telefone: data.telefone || "", acompanhantes: data.acompanhantes || [] } : item));
+      setHospedeEmEdicao(null);
+    } catch (error) {
+      alert(error.message || "Erro ao atualizar hóspede.");
+    }
   };
 
   const filtrados = hospedes.filter((h) => {
@@ -269,7 +227,7 @@ export default function Hospedes() {
           </label>
 
           <div className={styles.guestList}>
-            {filtrados.map((hospede) => (
+            {carregando ? <p className={styles.empty}>Carregando hóspedes...</p> : erro ? <p className={styles.empty}>{erro}</p> : filtrados.map((hospede) => (
               <div className={styles.guestRow} key={hospede.cpf}>
                 <div className={styles.guestAvatar}>{icons.user}</div>
 
@@ -312,7 +270,7 @@ export default function Hospedes() {
                     type="button"
                     className={styles.actionButtonDanger}
                     aria-label={`Excluir ${hospede.nome}`}
-                    onClick={() => removerHospede(hospede.cpf)}
+                    onClick={() => removerHospede(hospede.id)}
                   >
                     {icons.trash}
                     Excluir
@@ -321,7 +279,7 @@ export default function Hospedes() {
               </div>
             ))}
 
-            {filtrados.length === 0 && (
+            {!carregando && !erro && filtrados.length === 0 && (
               <p className={styles.empty}>Nenhum hóspede encontrado.</p>
             )}
           </div>
