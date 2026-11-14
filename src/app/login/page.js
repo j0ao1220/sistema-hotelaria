@@ -1,6 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { signInWithPassword } from "@/lib/supabase-client";
 import styles from "./login.module.css";
 
 export default function Login() {
