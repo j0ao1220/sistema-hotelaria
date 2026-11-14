@@ -45,7 +45,15 @@ const icons = {
     </Icon>
   ),
 };
- 
+
+const mascaraCPF = (valor) => {
+  const numeros = valor.replace(/\D/g, "").slice(0, 11);
+  return numeros
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+};
+
 /* ---------- Dados ---------- */
 const hospedesBase = [
   {
@@ -147,11 +155,39 @@ export default function Hospedes() {
   };
 
   const abrirEdicao = (hospede) => {
-    setHospedeEmEdicao({ ...hospede });
+    setHospedeEmEdicao({
+      ...hospede,
+      acompanhantes: Array.isArray(hospede.acompanhantes) && hospede.acompanhantes.length > 0
+        ? hospede.acompanhantes
+        : [{ nome: "", cpf: "" }],
+    });
   };
 
   const atualizarEdicao = (campo, valor) => {
     setHospedeEmEdicao((atual) => ({ ...atual, [campo]: valor }));
+  };
+
+  const atualizarAcompanhanteEdicao = (index, campo, valor) => {
+    setHospedeEmEdicao((atual) => ({
+      ...atual,
+      acompanhantes: (atual?.acompanhantes || []).map((item, i) =>
+        i === index ? { ...item, [campo]: valor } : item
+      ),
+    }));
+  };
+
+  const adicionarAcompanhanteEdicao = () => {
+    setHospedeEmEdicao((atual) => ({
+      ...atual,
+      acompanhantes: [...(atual?.acompanhantes || []), { nome: "", cpf: "" }],
+    }));
+  };
+
+  const removerAcompanhanteEdicao = (index) => {
+    setHospedeEmEdicao((atual) => ({
+      ...atual,
+      acompanhantes: (atual?.acompanhantes || []).filter((_, i) => i !== index),
+    }));
   };
 
   const salvarEdicao = (event) => {
@@ -159,8 +195,14 @@ export default function Hospedes() {
 
     if (!hospedeEmEdicao) return;
 
+    const acompanhantesValidos = (hospedeEmEdicao.acompanhantes || []).filter(
+      (item) => item?.nome?.trim() || item?.cpf?.trim()
+    );
+
     const proximaLista = hospedes.map((item) =>
-      item.cpf === hospedeEmEdicao.cpf ? { ...item, ...hospedeEmEdicao } : item
+      item.cpf === hospedeEmEdicao.cpf
+        ? { ...item, ...hospedeEmEdicao, acompanhantes: acompanhantesValidos }
+        : item
     );
 
     setHospedes(proximaLista);
@@ -442,6 +484,60 @@ export default function Hospedes() {
                     onChange={(event) => atualizarEdicao("status", event.target.value)}
                   />
                 </label>
+                <div className={styles.companionSection}>
+                  <div className={styles.companionHeader}>
+                    <h4 className={styles.sectionTitle}>Dependentes / acompanhantes</h4>
+                    <button
+                      type="button"
+                      className={styles.addCompanionButton}
+                      onClick={adicionarAcompanhanteEdicao}
+                    >
+                      + Adicionar acompanhante
+                    </button>
+                  </div>
+
+                  <div className={styles.companionList}>
+                    {(hospedeEmEdicao.acompanhantes || [{ nome: "", cpf: "" }]).map((acompanhante, index) => (
+                      <div className={styles.companionRow} key={`acompanhante-${index}`}>
+                        <label className={styles.field}>
+                          <span>Nome</span>
+                          <input
+                            value={acompanhante.nome || ""}
+                            onChange={(event) =>
+                              atualizarAcompanhanteEdicao(index, "nome", event.target.value)
+                            }
+                          />
+                        </label>
+
+                        <label className={styles.field}>
+                          <span>CPF</span>
+                          <input
+                            value={acompanhante.cpf || ""}
+                            onChange={(event) =>
+                              atualizarAcompanhanteEdicao(
+                                index,
+                                "cpf",
+                                mascaraCPF(event.target.value)
+                              )
+                            }
+                          />
+                        </label>
+
+                        {((hospedeEmEdicao.acompanhantes || []).length > 1) && (
+                          <button
+                            type="button"
+                            className={styles.removeCompanionButton}
+                            onClick={() => removerAcompanhanteEdicao(index)}
+                            aria-label={`Remover acompanhante ${index + 1}`}
+                          >
+                            Remover
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <label className={`${styles.field} ${styles.fullWidth}`}>
                   <span>Observações</span>
                   <textarea
