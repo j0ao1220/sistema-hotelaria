@@ -73,7 +73,7 @@ export default function Login() {
           >
 
             <label htmlFor="usuario">
-              Usuário ou E-mail
+              E-mail cadastrado
             </label>
 
             <input
