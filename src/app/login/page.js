@@ -7,10 +7,23 @@ import styles from "./login.module.css";
 
 export default function Login() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    router.push("/dashboard");
+    setErro("");
+    setCarregando(true);
+    try {
+      await signInWithPassword(email, senha);
+      router.push("/dashboard");
+    } catch (error) {
+      setErro(error.message || "Não foi possível entrar.");
+    } finally {
+      setCarregando(false);
+    }
   };
 
   return (
@@ -65,8 +78,12 @@ export default function Login() {
 
             <input
               id="usuario"
-              type="text"
-              placeholder="ex: admin_joao"
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="username"
             />
 
 
@@ -89,6 +106,10 @@ export default function Login() {
                 id="senha"
                 type="password"
                 placeholder="••••••••"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+                autoComplete="current-password"
               />
 
               <span className={styles.eye}>
@@ -112,11 +133,14 @@ export default function Login() {
             </label>
 
 
+            {erro && <p role="alert">{erro}</p>}
+
             <button
               type="submit"
               className={styles.loginButton}
+              disabled={carregando}
             >
-              Entrar no Sistema
+              {carregando ? "Entrando..." : "Entrar no Sistema"}
             </button>
 
           </form>
