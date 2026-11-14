@@ -9,14 +9,14 @@ function getConfig() {
 
 function saveSession(session) {
   if (typeof window !== "undefined") {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
   }
 }
 
 function readSession() {
   if (typeof window === "undefined") return null;
   try {
-    return JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "null");
+    return JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) || "null");
   } catch {
     return null;
   }
@@ -44,7 +44,7 @@ async function refreshSession(session) {
     body: JSON.stringify({ refresh_token: session.refresh_token }),
   });
   if (!response.ok) {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.sessionStorage.removeItem(STORAGE_KEY);
     return null;
   }
   const renewed = await response.json();
@@ -79,7 +79,7 @@ export async function apiFetch(path, options = {}) {
     if (renewed?.access_token) response = await send(renewed.access_token);
   }
   if (response.status === 401) {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.sessionStorage.removeItem(STORAGE_KEY);
     throw new Error("Sua sessão expirou. Entre novamente.");
   }
   return response;
@@ -94,5 +94,5 @@ export async function signOut() {
       headers: { apikey: key, Authorization: `Bearer ${token}` },
     }).catch(() => {});
   }
-  if (typeof window !== "undefined") window.localStorage.removeItem(STORAGE_KEY);
+  if (typeof window !== "undefined") window.sessionStorage.removeItem(STORAGE_KEY);
 }
