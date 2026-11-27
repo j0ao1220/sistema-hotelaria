@@ -1,256 +1,1513 @@
-"use client";
- 
-import { useState } from "react";
-import styles from "./relatorios.module.css";
- 
-/* ---------- Ícones (SVG inline) ---------- */
-const Icon = ({ children, size = 15 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    {children}
-  </svg>
-);
- 
-const icons = {
-  bed: <Icon><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" /></Icon>,
-  door: (
-    <Icon>
-      <path d="M13 4h3a2 2 0 0 1 2 2v14M2 20h3M13 20h9M10 12v.01" />
-      <path d="M13 4.56v16.18a.5.5 0 0 1-.63.49l-6.35-1.8A1.5 1.5 0 0 1 5 17.97V5.06a1.5 1.5 0 0 1 1.1-1.45l6.27-1.79a.5.5 0 0 1 .63.48z" />
-    </Icon>
-  ),
-  receipt: (
-    <Icon>
-      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
-      <path d="M16 8H8M16 12H8M13 16H8" />
-    </Icon>
-  ),
-  trend: <Icon><path d="m22 7-8.5 8.5-5-5L2 17" /><path d="M16 7h6v6" /></Icon>,
-  chevronDown: <Icon size={12}><path d="m6 9 6 6 6-6" /></Icon>,
-  download: <Icon size={12}><path d="M12 3v12M7 10l5 5 5-5M5 21h14" /></Icon>,
-};
- 
-/* ---------- Dados ---------- */
-const evolucao = {
-  Ocupação: {
-    subtitulo: "Taxa média por intervalo de 5 dias",
-    formato: (v) => `${v}%`,
-    max: 100,
-    dados: [
-      { label: "01-05", valor: 68 },
-      { label: "06-10", valor: 72 },
-      { label: "11-15", valor: 70 },
-      { label: "16-20", valor: 80 },
-      { label: "21-25", valor: 77 },
-      { label: "26-30", valor: 85 },
-    ],
+﻿"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+const dados = [
+  { categoria: "Standard", disponiveis: 48, ocupados: 41, receita: 158420 },
+  { categoria: "Executivo", disponiveis: 36, ocupados: 27, receita: 128780 },
+  { categoria: "Luxo", disponiveis: 24, ocupados: 18, receita: 92340 },
+  { categoria: "Suíte", disponiveis: 12, ocupados: 8, receita: 35160 },
+];
+
+const evolucao = [
+  { mes: "Abr", valor: 68 },
+  { mes: "Mai", valor: 72 },
+  { mes: "Jun", valor: 70 },
+  { mes: "Jul", valor: 80 },
+  { mes: "Ago", valor: 77 },
+  { mes: "Set", valor: 85 },
+];
+
+const documentos = [
+  {
+    nome: "Relatório operacional mensal",
+    tipo: "Operações",
+    data: "30 set. 2026",
+    status: "Publicado",
+    codigo: "DOC-2026-094",
   },
-  Faturamento: {
-    subtitulo: "Receita por intervalo de 5 dias",
-    formato: (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }),
-    max: 90000,
-    dados: [
-      { label: "01-05", valor: 58400 },
-      { label: "06-10", valor: 63200 },
-      { label: "11-15", valor: 61500 },
-      { label: "16-20", valor: 72800 },
-      { label: "21-25", valor: 69300 },
-      { label: "26-30", valor: 78100 },
-    ],
+  {
+    nome: "Auditoria de ocupação",
+    tipo: "Auditoria",
+    data: "28 set. 2026",
+    status: "Em revisão",
+    codigo: "DOC-2026-091",
   },
-};
- 
-const ocupacaoCategoria = [
-  { nome: "Standard", valor: 85, cor: "teal" },
-  { nome: "Executivo", valor: 75, cor: "green" },
-  { nome: "Luxo", valor: 75, cor: "brown" },
-  { nome: "Suíte", valor: 67, cor: "amber" },
+  {
+    nome: "Resumo de atendimento ao hóspede",
+    tipo: "Experiência",
+    data: "25 set. 2026",
+    status: "Publicado",
+    codigo: "DOC-2026-086",
+  },
+  {
+    nome: "Plano de manutenção preventiva",
+    tipo: "Manutenção",
+    data: "22 set. 2026",
+    status: "Publicado",
+    codigo: "DOC-2026-080",
+  },
 ];
- 
-const indicadores = [
-  { titulo: "Taxa de ocupação", valor: "78,4%", nota: "+ 6,2 % vs. agosto", icon: icons.bed, tom: "teal" },
-  { titulo: "Quartos ocupados", valor: "94", nota: "de 120 disponíveis", icon: icons.door, tom: "green" },
-  { titulo: "Diária média", valor: "R$ 486,20", nota: "+ 4,8% no período", icon: icons.receipt, tom: "amber" },
-  { titulo: "Receita de hospedagem", valor: "R$ 412.680", nota: "30 dias consolidados", icon: icons.trend, tom: "red" },
+
+const transacoes = [
+  {
+    descricao: "Hospedagem — Standard",
+    referencia: "RES-8431",
+    data: "30 set. 2026",
+    tipo: "Receita",
+    valor: 18450,
+  },
+  {
+    descricao: "Hospedagem — Executivo",
+    referencia: "RES-8418",
+    data: "29 set. 2026",
+    tipo: "Receita",
+    valor: 12780,
+  },
+  {
+    descricao: "Manutenção preventiva",
+    referencia: "DES-2206",
+    data: "28 set. 2026",
+    tipo: "Despesa",
+    valor: -3250,
+  },
+  {
+    descricao: "Hospedagem — Suite",
+    referencia: "RES-8399",
+    data: "27 set. 2026",
+    tipo: "Receita",
+    valor: 8960,
+  },
 ];
- 
-const detalhamento = [
-  { categoria: "Standard", disponiveis: 48, ocupados: 41, taxa: "85,4%", faturamento: "R$ 158.420,00" },
-  { categoria: "Executivo", disponiveis: 36, ocupados: 27, taxa: "75,0%", faturamento: "R$ 128.780,00" },
-  { categoria: "Luxo", disponiveis: 24, ocupados: 18, taxa: "75,0%", faturamento: "R$ 92.340,00" },
-  { categoria: "Suíte", disponiveis: 12, ocupados: 8, taxa: "66,7%", faturamento: "R$ 35.160,00" },
+
+const abas = [
+  { nome: "Visão geral", icone: "◷" },
+  { nome: "Documentação", icone: "◈" },
+  { nome: "Financeiro", icone: "◷" },
+  { nome: "Acompanhamento", icone: "◈" },
 ];
- 
-/* ---------- Página ---------- */
-export default function RelatoriosPage() {
-  const [periodo, setPeriodo] = useState("setembro");
-  const [tipo, setTipo] = useState("ocupacao");
-  const [visualizacao, setVisualizacao] = useState("Ocupação");
- 
-  const grafico = evolucao[visualizacao];
- 
+
+export default function Home() {
+  const [aba, setAba] = useState("Visão geral");
+  const [periodo, setPeriodo] = useState("Setembro 2026");
+  const [categoria, setCategoria] = useState("Todas");
+  const [busca, setBusca] = useState("");
+  const [mensagem, setMensagem] = useState("");
+
+  const [indicadores, setIndicadores] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erroIndicadores, setErroIndicadores] = useState("");
+
+  useEffect(() => {
+    async function buscarIndicadores() {
+      try {
+        const resposta = await fetch("/api/relatorios/indicadores");
+
+        if (!resposta.ok) {
+          throw new Error("Falha ao consultar os indicadores.");
+        }
+
+        const resultado = await resposta.json();
+
+        if (resultado.status !== "sucesso") {
+          throw new Error("A API não conseguiu retornar os indicadores.");
+        }
+
+        setIndicadores(resultado.dados);
+      } catch (erro) {
+        console.error("Erro ao carregar indicadores:", erro);
+        setErroIndicadores("Não foi possível carregar os indicadores.");
+      } finally {
+        setCarregando(false);
+      }
+    }
+
+    buscarIndicadores();
+  }, []);
+
+  const [acompanhamento, setAcompanhamento] = useState(null);
+  const [carregandoAcompanhamento, setCarregandoAcompanhamento] =
+    useState(false);
+  const [erroAcompanhamento, setErroAcompanhamento] = useState("");
+  const [filtroTipoAcompanhamento, setFiltroTipoAcompanhamento] =
+    useState("Todos");
+  const [filtroStatusAcompanhamento, setFiltroStatusAcompanhamento] =
+    useState("Todos");
+  const [buscaAcompanhamento, setBuscaAcompanhamento] = useState("");
+  const [atualizacaoAcompanhamento, setAtualizacaoAcompanhamento] = useState(0);
+
+  useEffect(() => {
+    if (aba !== "Acompanhamento") return;
+
+    let ativo = true;
+
+    async function buscarAcompanhamento() {
+      setCarregandoAcompanhamento(true);
+      setErroAcompanhamento("");
+
+      try {
+        const resposta = await fetch("/api/relatorios/acompanhamento", {
+          cache: "no-store",
+        });
+
+        if (!resposta.ok) {
+          throw new Error(
+            resposta.status === 404
+              ? "A rota de acompanhamento não foi encontrada (HTTP 404). Confira o caminho do arquivo route.js."
+              : "Não foi possível consultar os dados de acompanhamento."
+          );
+        }
+
+        const resultado = await resposta.json();
+
+        if (resultado.status !== "sucesso" || !resultado.dados) {
+          throw new Error(
+            resultado.mensagem || "A API retornou uma resposta inválida."
+          );
+        }
+
+        if (ativo) {
+          setAcompanhamento({
+            solicitacoes: resultado.dados.solicitacoes ?? [],
+            reclamacoes: resultado.dados.reclamacoes ?? [],
+            ocorrencias: resultado.dados.ocorrencias ?? [],
+            sincronizacoes: resultado.dados.sincronizacoes ?? [],
+          });
+        }
+      } catch (erro) {
+        console.error("Erro ao carregar acompanhamento:", erro);
+
+        if (ativo) {
+          setErroAcompanhamento(
+            erro instanceof Error
+              ? erro.message
+              : "Erro inesperado ao carregar acompanhamento."
+          );
+        }
+      } finally {
+        if (ativo) setCarregandoAcompanhamento(false);
+      }
+    }
+
+    buscarAcompanhamento();
+
+    return () => {
+      ativo = false;
+    };
+  }, [aba, atualizacaoAcompanhamento]);
+
+  const registrosAcompanhamento = useMemo(() => {
+    if (!acompanhamento) return [];
+
+    const converter = (itens, tipo, campoData) =>
+      itens.map((item) => ({
+        id: item.id,
+        tipo,
+        categoria: item.categoria || item.tipo || "Não informado",
+        descricao: item.descricao || "Sem descrição",
+        status: item.status || "Não informado",
+        prioridade: item.prioridade || item.gravidade || "Não definida",
+        data: item[campoData] || "",
+        origem: item.origemSistema || "Sistema não informado",
+        quarto: item.quarto?.codigo || "—",
+      }));
+
+    return [
+      ...converter(acompanhamento.solicitacoes, "Solicitação", "abertaEm"),
+      ...converter(acompanhamento.reclamacoes, "Reclamação", "registradaEm"),
+      ...converter(acompanhamento.ocorrencias, "Ocorrência", "ocorridaEm"),
+    ].sort(
+      (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
+    );
+  }, [acompanhamento]);
+
+  const registrosAcompanhamentoFiltrados = useMemo(() => {
+    return registrosAcompanhamento.filter((item) => {
+      const correspondeTipo =
+        filtroTipoAcompanhamento === "Todos" ||
+        item.tipo === filtroTipoAcompanhamento;
+
+      const correspondeStatus =
+        filtroStatusAcompanhamento === "Todos" ||
+        item.status.toLowerCase() === filtroStatusAcompanhamento.toLowerCase();
+
+      const texto = [
+        item.tipo,
+        item.categoria,
+        item.descricao,
+        item.status,
+        item.prioridade,
+        item.origem,
+        item.quarto,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return (
+        correspondeTipo &&
+        correspondeStatus &&
+        texto.includes(buscaAcompanhamento.toLowerCase())
+      );
+    });
+  }, [
+    registrosAcompanhamento,
+    filtroTipoAcompanhamento,
+    filtroStatusAcompanhamento,
+    buscaAcompanhamento,
+  ]);
+
+  const totalSolicitacoesAcompanhamento =
+    acompanhamento?.solicitacoes.length ?? 0;
+
+  const totalReclamacoesAcompanhamento =
+    acompanhamento?.reclamacoes.length ?? 0;
+
+  const totalOcorrenciasAcompanhamento =
+    acompanhamento?.ocorrencias.length ?? 0;
+
+  const totalRegistrosAcompanhamento =
+    totalSolicitacoesAcompanhamento +
+    totalReclamacoesAcompanhamento +
+    totalOcorrenciasAcompanhamento;
+
+  const registrosPendentesAcompanhamento = registrosAcompanhamento.filter(
+    (item) => {
+      const status = item.status.toLowerCase();
+
+      return (
+        status.includes("abert") ||
+        status.includes("pend") ||
+        status.includes("andamento") ||
+        status.includes("aguard")
+      );
+    }
+  ).length;
+
+  function formatarDataAcompanhamento(data) {
+    if (!data) return "—";
+
+    const dataConvertida = new Date(data);
+
+    if (Number.isNaN(dataConvertida.getTime())) return "—";
+
+    return dataConvertida.toLocaleDateString("pt-BR");
+  }
+
+  const totalDisponiveis = dados.reduce(
+    (total, item) => total + item.disponiveis,
+    0
+  );
+
+  const totalOcupados = dados.reduce(
+    (total, item) => total + item.ocupados,
+    0
+  );
+
+  const receitaTotal = dados.reduce(
+    (total, item) => total + item.receita,
+    0
+  );
+
+  const ocupacao = (totalOcupados / totalDisponiveis) * 100;
+  const quartosLivres = totalDisponiveis - totalOcupados;
+  const diariaMedia = receitaTotal / totalOcupados;
+
+  const dadosFiltrados = useMemo(
+    () =>
+      dados.filter((item) => {
+        const correspondeCategoria =
+          categoria === "Todas" || item.categoria === categoria;
+
+        return (
+          correspondeCategoria &&
+          item.categoria.toLowerCase().includes(busca.toLowerCase())
+        );
+      }),
+    [categoria, busca]
+  );
+
+  const documentosFiltrados = useMemo(
+    () =>
+      documentos.filter((item) =>
+        `${item.nome} ${item.tipo} ${item.codigo}`
+          .toLowerCase()
+          .includes(busca.toLowerCase())
+      ),
+    [busca]
+  );
+
+  function formatarMoeda(valor) {
+    return valor.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  }
+
+  function exportarCSV() {
+    const cabecalho = [
+      "Categoria",
+      "Disponíveis",
+      "Ocupados",
+      "Ocupação",
+      "Receita",
+    ];
+
+    const linhas = dadosFiltrados.map((item) => [
+      item.categoria,
+      item.disponiveis,
+      item.ocupados,
+      `${((item.ocupados / item.disponiveis) * 100).toFixed(1)}%`,
+      item.receita,
+    ]);
+
+    const conteudo = [
+      cabecalho.join(";"),
+      ...linhas.map((linha) => linha.join(";")),
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + conteudo], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "relatorio-grand-plaza.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+
+    setMensagem("Arquivo CSV exportado com sucesso.");
+  }
+
+  const cards = [
+    {
+      titulo: "Taxa de ocupação",
+      valor: carregando
+        ? "Carregando..."
+        : `${(indicadores?.taxaOcupacao ?? 0)
+            .toFixed(1)
+            .replace(".", ",")}%`,
+      detalhe: "Calculado com dados do banco",
+      icone: "▦",
+    },
+    {
+      titulo: "Quartos ocupados",
+      valor: carregando
+        ? "Carregando..."
+        : `${indicadores?.quartosOcupados ?? 0} / ${
+            indicadores?.totalQuartos ?? 0
+          }`,
+      detalhe: "Quartos ativos e ocupados",
+      icone: "▣",
+    },
+    {
+      titulo: "Diária média",
+      valor: "Aguardando dados",
+      detalhe: "Integração financeira pendente",
+      icone: "R$",
+    },
+    {
+      titulo: "Receita de hospedagem",
+      valor: "Aguardando dados",
+      detalhe: "Integração financeira pendente",
+      icone: "↗",
+    },
+  ];
+
   return (
-    <div className={styles.page}>
-      {/* BARRA SUPERIOR */}
-      <header className={styles.topbar}>
-        <span className={styles.topbarTitle}>Hotel Grand Plaza / Central de Reservas</span>
-        <div className={styles.topbarUser}>
-          <span>Admin Painel</span>
-          <div className={styles.avatar} />
+    <main
+      className="min-h-screen bg-[#f4f7fb] text-slate-800"
+      style={{ border: "1px solid #d9d9d9" }}
+    >
+      {/* CABEÇALHO SUPERIOR BRANCO */}
+      <header
+        style={{
+          height: "65px",
+          backgroundColor: "#ffffff",
+          borderBottom: "1px solid #e5e5e5",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 30px",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "14px",
+            color: "#334155",
+            fontWeight: 400,
+          }}
+        >
+          Hotel Grand Plaza / Central de Reservas
+        </span>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "14px",
+              color: "#334155",
+            }}
+          >
+            Admin Painel
+          </span>
+
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              backgroundColor: "#432817",
+              border: "3px solid #ffffff",
+              boxShadow: "0 0 0 1px #d6d6d6",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                width: "14px",
+                height: "14px",
+                borderRadius: "50%",
+                backgroundColor: "#c7a17d",
+              }}
+            />
+          </div>
         </div>
       </header>
- 
-      {/* CABEÇALHO */}
-      <section className={styles.banner}>
-        <span className={styles.bannerBreadcrumb}>Relatórios &gt; Visão Geral</span>
-        <h1 className={styles.bannerTitle}>Relatórios</h1>
-        <p className={styles.bannerText}>Analise o desempenho operacional e financeiro do hotel.</p>
+
+      {/* BANNER MARROM */}
+      <section
+        style={{
+          backgroundImage:
+            "linear-gradient(90deg, #8a7160 0%, #a48b76 100%)",
+          color: "#ffffff",
+          padding: "28px 30px 30px",
+        }}
+      >
+        <span style={{ fontSize: "10.5px", opacity: 0.9 }}>
+          Relatórios &gt; Visão Geral
+        </span>
+
+        <h1
+          style={{
+            margin: "4px 0",
+            fontSize: "22px",
+            fontWeight: 700,
+          }}
+        >
+          Relatórios
+        </h1>
+
+        <p
+          style={{
+            margin: 0,
+            fontSize: "12.5px",
+            opacity: 0.9,
+          }}
+        >
+          Indicadores, documentação e inteligência financeira em um só lugar.
+        </p>
       </section>
- 
-      <div className={styles.content}>
-        {/* Gráfico + categorias */}
-        <div className={styles.topGrid}>
-          <div className={styles.panel}>
-            <h2 className={styles.panelTitle}>Evolução da {visualizacao.toLowerCase()}</h2>
-            <p className={styles.panelSubtitle}>{grafico.subtitulo}</p>
- 
-            <div className={styles.chart}>
-              {grafico.dados.map((d) => (
-                <div key={d.label} className={styles.chartColumn}>
-                  <div
-                    className={styles.bar}
-                    style={{ height: `${(d.valor / grafico.max) * 100}%` }}
-                    title={grafico.formato(d.valor)}
-                  />
-                  <span className={styles.chartLabel}>{d.label}</span>
-                </div>
-              ))}
+
+      <section className="min-w-0 flex-1 px-5 py-6 md:px-9 md:py-8">
+        <header className="mb-7 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="mb-2 text-xs text-slate-400">
+              Workspace <span className="mx-2">/</span>
+              <span className="text-cyan-700">Relatórios</span>
+            </p>
+
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+              Central de relatórios
+            </h2>
+
+            <p className="mt-1.5 text-sm text-slate-500">
+              Indicadores, documentação e inteligência financeira em um só
+              lugar.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-semibold">Administrador</p>
+              <p className="text-xs text-slate-400">Grand Plaza · Hotel</p>
+            </div>
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+              AD
             </div>
           </div>
- 
-          <div className={`${styles.panel} ${styles.categoryPanel}`}>
-            <h2 className={styles.panelTitle}>Ocupação por categoria</h2>
- 
-            <div className={styles.categoryList}>
-              {ocupacaoCategoria.map((c) => (
-                <div key={c.nome} className={styles.categoryItem}>
-                  <span className={styles.categoryName}>{c.nome}</span>
-                  <span className={styles.categoryValue}>{c.valor}%</span>
-                  <div className={styles.progress}>
+        </header>
+
+        <div className="mb-6 flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-2 shadow-sm">
+          <div className="grid min-w-0 flex-1 grid-cols-4 gap-1">
+            {abas.map((item) => (
+              <button
+                key={item.nome}
+                onClick={() => {
+                  setAba(item.nome);
+                  setMensagem("");
+                  setBusca("");
+                }}
+                className={`flex min-w-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-2 py-2.5 text-sm font-semibold transition ${
+                  aba === item.nome
+                    ? "bg-[#101b2d] text-white shadow"
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                <span>{item.icone}</span>
+                {item.nome}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2 border-l border-slate-100 pl-4 pr-2">
+            <span className="hidden text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400 sm:inline">
+              Live data
+            </span>
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="text-xs text-slate-500">Atualizado agora</span>
+          </div>
+        </div>
+
+        {aba === "Visão geral" && (
+          <>
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                  Performance operacional
+                </p>
+                <h3 className="mt-1 text-xl font-bold text-slate-900">
+                  Resumo executivo
+                </h3>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <select
+                  value={periodo}
+                  onChange={(e) => setPeriodo(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-cyan-400"
+                >
+                  <option>Setembro 2026</option>
+                  <option>Agosto 2026</option>
+                  <option>Julho 2026</option>
+                  <option>Junho 2026</option>
+                </select>
+
+                <button
+                  onClick={exportarCSV}
+                  className="rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+                >
+                  ↓ Exportar CSV
+                </button>
+              </div>
+            </div>
+
+            {erroIndicadores && (
+              <p className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {erroIndicadores}
+              </p>
+            )}
+
+            {mensagem && (
+              <p
+                role="status"
+                className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+              >
+                {mensagem}
+              </p>
+            )}
+
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+              {cards.map((item) => (
+                <article
+                  key={item.titulo}
+                  className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
+                >
+                  <div className="mb-5 flex items-center justify-between">
+                    <p className="text-xs font-medium text-slate-500">
+                      {item.titulo}
+                    </p>
+
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-sm font-bold text-cyan-700">
+                      {item.icone}
+                    </span>
+                  </div>
+
+                  <p className="text-2xl font-bold tracking-tight text-slate-900">
+                    {item.valor}
+                  </p>
+
+                  <p className="mt-2 text-xs text-slate-400">
+                    {item.detalhe}
+                  </p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
+              <article className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+                <div className="mb-7 flex items-start justify-between">
+                  <div>
+                    <h3 className="font-bold text-slate-900">
+                      Evolução da ocupação
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Percentual mensal · últimos 6 meses
+                    </p>
+                  </div>
+
+                  <span className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                    +17,6%
+                  </span>
+                </div>
+
+                <div className="flex h-48 items-end justify-around gap-3 border-b border-slate-100 pb-2">
+                  {evolucao.map((item) => (
                     <div
-                      className={`${styles.progressFill} ${styles[c.cor]}`}
-                      style={{ width: `${c.valor}%` }}
-                    />
+                      key={item.mes}
+                      className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+                    >
+                      <span className="text-[10px] font-semibold text-slate-500">
+                        {item.valor}%
+                      </span>
+
+                      <div
+                        className="w-full max-w-12 rounded-t-lg bg-gradient-to-t from-blue-700 to-cyan-400 transition-all hover:brightness-110"
+                        style={{ height: `${item.valor * 1.45}px` }}
+                      />
+
+                      <span className="text-[10px] text-slate-400">
+                        {item.mes}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+
+              <article className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+                <div className="mb-7">
+                  <h3 className="font-bold text-slate-900">
+                    Ocupação por categoria
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Distribuição de quartos ocupados
+                  </p>
+                </div>
+
+                <div className="space-y-5">
+                  {dados.map((item) => {
+                    const percentual =
+                      (item.ocupados / item.disponiveis) * 100;
+
+                    return (
+                      <div key={item.categoria}>
+                        <div className="mb-2 flex justify-between text-xs">
+                          <span className="font-medium text-slate-600">
+                            {item.categoria}
+                          </span>
+                          <span className="font-bold text-slate-800">
+                            {percentual.toFixed(1).replace(".", ",")}%
+                          </span>
+                        </div>
+
+                        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-blue-700 to-cyan-400"
+                            style={{ width: `${percentual}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </article>
+            </div>
+
+            <article className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5">
+                <div>
+                  <h3 className="font-bold text-slate-900">
+                    Desempenho por categoria
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Detalhamento da operação e da receita
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    value={categoria}
+                    onChange={(e) => setCategoria(e.target.value)}
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-cyan-400"
+                  >
+                    <option>Todas</option>
+                    <option>Standard</option>
+                    <option>Executivo</option>
+                    <option>Luxo</option>
+                    <option>Suíte</option>
+                  </select>
+
+                  <input
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    placeholder="Pesquisar categoria..."
+                    className="w-48 rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-cyan-400"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[620px] text-left">
+                  <thead>
+                    <tr className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400">
+                      <th className="px-5 py-3">Categoria</th>
+                      <th className="px-5 py-3">Disponíveis</th>
+                      <th className="px-5 py-3">Ocupados</th>
+                      <th className="px-5 py-3">Ocupação</th>
+                      <th className="px-5 py-3">Receita</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {dadosFiltrados.map((item) => (
+                      <tr
+                        key={item.categoria}
+                        className="border-t border-slate-100 text-sm hover:bg-slate-50"
+                      >
+                        <td className="px-5 py-4 font-semibold">
+                          {item.categoria}
+                        </td>
+                        <td className="px-5 py-4 text-slate-500">
+                          {item.disponiveis}
+                        </td>
+                        <td className="px-5 py-4 text-slate-500">
+                          {item.ocupados}
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-semibold text-cyan-800">
+                            {(
+                              (item.ocupados / item.disponiveis) *
+                              100
+                            )
+                              .toFixed(1)
+                              .replace(".", ",")}
+                            %
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 font-semibold">
+                          {formatarMoeda(item.receita)}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {dadosFiltrados.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="p-8 text-center text-sm text-slate-400"
+                        >
+                          Nenhuma categoria encontrada.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </>
+        )}
+
+        {aba === "Documentação" && (
+          <>
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                  Governança e conformidade
+                </p>
+                <h3 className="mt-1 text-xl font-bold text-slate-900">
+                  Central de documentação
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Relatórios, auditorias e documentos operacionais do hotel.
+                </p>
+              </div>
+
+              <button
+                onClick={() =>
+                  setMensagem(
+                    "Novo documento: fluxo de cadastro disponível para integração com o sistema documental."
+                  )
+                }
+                className="rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-400"
+              >
+                + Novo documento
+              </button>
+            </div>
+
+            {mensagem && (
+              <p
+                role="status"
+                className="mb-4 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-800"
+              >
+                {mensagem}
+              </p>
+            )}
+
+            <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {[
+                { label: "Documentos no acervo", value: "128", icon: "▤" },
+                { label: "Publicados", value: "116", icon: "✓" },
+                { label: "Em revisão", value: "12", icon: "◷" },
+              ].map((x) => (
+                <div
+                  key={x.label}
+                  className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-50 font-bold text-cyan-700">
+                    {x.icon}
+                  </span>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {x.value}
+                    </p>
+                    <p className="text-xs text-slate-500">{x.label}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
- 
-        {/* Filtros */}
-        <div className={`${styles.panel} ${styles.filters}`}>
-          <div className={styles.field}>
-            <label className={styles.fieldLabel} htmlFor="periodo">Período</label>
-            <div className={styles.selectBox}>
-              <select id="periodo" value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
-                <option value="setembro">01/09/2026 - 30/09/2026</option>
-                <option value="agosto">01/08/2026 - 31/08/2026</option>
-                <option value="julho">01/07/2026 - 31/07/2026</option>
-              </select>
-              <span className={styles.selectIcon}>{icons.chevronDown}</span>
+
+            <article className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5">
+                <div>
+                  <h4 className="font-bold">Biblioteca de documentos</h4>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Acesso centralizado aos registros do empreendimento
+                  </p>
+                </div>
+
+                <input
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar documento..."
+                  className="w-56 rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-cyan-400"
+                />
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[650px] text-left">
+                  <thead>
+                    <tr className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400">
+                      <th className="px-5 py-3">Documento</th>
+                      <th className="px-5 py-3">Categoria</th>
+                      <th className="px-5 py-3">Atualizado</th>
+                      <th className="px-5 py-3">Status</th>
+                      <th className="px-5 py-3">Referência</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {documentosFiltrados.map((d) => (
+                      <tr
+                        key={d.codigo}
+                        className="border-t border-slate-100 text-sm hover:bg-slate-50"
+                      >
+                        <td className="px-5 py-4 font-semibold">{d.nome}</td>
+                        <td className="px-5 py-4 text-slate-500">{d.tipo}</td>
+                        <td className="px-5 py-4 text-slate-500">{d.data}</td>
+                        <td className="px-5 py-4">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                              d.status === "Publicado"
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            {d.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 font-mono text-xs text-slate-400">
+                          {d.codigo}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {documentosFiltrados.length === 0 && (
+                  <p className="p-8 text-center text-sm text-slate-400">
+                    Nenhum documento encontrado.
+                  </p>
+                )}
+              </div>
+            </article>
+          </>
+        )}
+
+        {aba === "Financeiro" && (
+          <>
+            <div className="mb-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                Desempenho econômico
+              </p>
+              <h3 className="mt-1 text-xl font-bold text-slate-900">
+                Painel financeiro
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Acompanhamento de receitas, despesas e resultado operacional.
+              </p>
             </div>
-          </div>
- 
-          <div className={styles.field}>
-            <label className={styles.fieldLabel} htmlFor="tipo">Tipo de relatório</label>
-            <div className={styles.selectBox}>
-              <select id="tipo" value={tipo} onChange={(e) => setTipo(e.target.value)}>
-                <option value="ocupacao">Ocupação</option>
-                <option value="faturamento">Faturamento</option>
-                <option value="hospedes">Hóspedes</option>
-              </select>
-              <span className={styles.selectIcon}>{icons.chevronDown}</span>
-            </div>
-          </div>
- 
-          <div className={styles.field}>
-            <span className={styles.fieldLabel}>Visualização</span>
-            <div className={styles.toggleGroup}>
-              {["Ocupação", "Faturamento"].map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  className={`${styles.toggle} ${visualizacao === v ? styles.toggleActive : ""}`}
-                  onClick={() => setVisualizacao(v)}
+
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                {
+                  titulo: "Receita bruta",
+                  valor: formatarMoeda(receitaTotal),
+                  subtitulo: "Dados demonstrativos",
+                  icone: "↗",
+                },
+                {
+                  titulo: "Despesas registradas",
+                  valor: formatarMoeda(48260),
+                  subtitulo: "Dados demonstrativos",
+                  icone: "↘",
+                },
+                {
+                  titulo: "Resultado operacional",
+                  valor: formatarMoeda(receitaTotal - 48260),
+                  subtitulo: "Dados demonstrativos",
+                  icone: "◈",
+                },
+                {
+                  titulo: "Margem operacional",
+                  valor: `${(
+                    ((receitaTotal - 48260) / receitaTotal) *
+                    100
+                  )
+                    .toFixed(1)
+                    .replace(".", ",")}%`,
+                  subtitulo: "Dados demonstrativos",
+                  icone: "%",
+                },
+              ].map((x) => (
+                <article
+                  key={x.titulo}
+                  className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
                 >
-                  {v}
-                </button>
+                  <div className="mb-5 flex justify-between">
+                    <p className="text-xs text-slate-500">{x.titulo}</p>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-sm font-bold text-cyan-700">
+                      {x.icone}
+                    </span>
+                  </div>
+
+                  <p className="text-xl font-bold text-slate-900">{x.valor}</p>
+                  <p className="mt-2 text-xs text-slate-400">{x.subtitulo}</p>
+                </article>
               ))}
             </div>
-          </div>
- 
-          <button type="button" className={styles.primaryButton}>
-            Gerar Relatório
-          </button>
-        </div>
- 
-        {/* Indicadores */}
-        <div className={styles.kpiGrid}>
-          {indicadores.map((k) => (
-            <div key={k.titulo} className={styles.kpiCard}>
-              <span className={styles.kpiTitle}>{k.titulo}</span>
-              <span className={`${styles.kpiIcon} ${styles[`${k.tom}Soft`]}`}>{k.icon}</span>
-              <strong className={styles.kpiValue}>{k.valor}</strong>
-              <span className={styles.kpiNote}>{k.nota}</span>
+
+            <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-3">
+              <article className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm xl:col-span-2">
+                <div className="mb-7">
+                  <h4 className="font-bold">Receita mensal</h4>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Índice relativo de desempenho · Dados demonstrativos
+                  </p>
+                </div>
+
+                <div className="flex h-52 items-end justify-around gap-3 border-b border-slate-100 pb-2">
+                  {evolucao.map((item) => (
+                    <div
+                      key={item.mes}
+                      className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+                    >
+                      <span className="text-[10px] text-slate-400">
+                        {item.valor}%
+                      </span>
+
+                      <div
+                        className="w-full max-w-12 rounded-t-lg bg-gradient-to-t from-indigo-700 to-cyan-400"
+                        style={{ height: `${item.valor * 1.5}px` }}
+                      />
+
+                      <span className="text-[10px] text-slate-400">
+                        {item.mes}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+
+              <article className="rounded-2xl border border-slate-200/80 bg-[#101b2d] p-6 text-white shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wider text-cyan-300">
+                  Resumo do período
+                </p>
+
+                <h4 className="mt-2 text-lg font-bold">{periodo}</h4>
+
+                <div className="my-6 h-px bg-white/10" />
+
+                <p className="text-xs text-slate-400">
+                  Receita por quarto ocupado
+                </p>
+
+                <p className="mt-1 text-2xl font-bold">
+                  {formatarMoeda(diariaMedia)}
+                </p>
+
+                <p className="mt-6 text-xs leading-relaxed text-slate-400">
+                  Valores demonstrativos. A integração com os lançamentos
+                  financeiros do banco de dados será realizada na próxima
+                  etapa.
+                </p>
+              </article>
             </div>
-          ))}
-        </div>
- 
-        {/* Tabela */}
-        <div className={`${styles.panel} ${styles.tablePanel}`}>
-          <div className={styles.tableHeader}>
-            <h2 className={styles.panelTitle}>Detalhamento por categoria</h2>
-            <p className={styles.panelSubtitle}>Resultados consolidados de setembro de 2026</p>
-            <a href="#" className={styles.exportLink}>
-              Exportar PDF {icons.download}
-            </a>
-          </div>
- 
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Categoria</th>
-                  <th>Quartos disponíveis</th>
-                  <th>Quartos ocupados</th>
-                  <th>Taxa de ocupação</th>
-                  <th>Faturamento</th>
-                </tr>
-              </thead>
-              <tbody>
-                {detalhamento.map((d) => (
-                  <tr key={d.categoria}>
-                    <td className={styles.categoriaCell}>{d.categoria}</td>
-                    <td>{d.disponiveis}</td>
-                    <td>{d.ocupados}</td>
-                    <td>{d.taxa}</td>
-                    <td className={styles.faturamentoCell}>{d.faturamento}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
+
+            <article className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="border-b border-slate-100 p-5">
+                <h4 className="font-bold">Movimentações recentes</h4>
+                <p className="mt-1 text-xs text-slate-400">
+                  Dados demonstrativos de receitas e despesas
+                </p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[600px] text-left">
+                  <thead>
+                    <tr className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400">
+                      <th className="px-5 py-3">Descrição</th>
+                      <th className="px-5 py-3">Referência</th>
+                      <th className="px-5 py-3">Data</th>
+                      <th className="px-5 py-3">Tipo</th>
+                      <th className="px-5 py-3">Valor</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {transacoes.map((t) => (
+                      <tr
+                        key={t.referencia}
+                        className="border-t border-slate-100 text-sm"
+                      >
+                        <td className="px-5 py-4 font-semibold">
+                          {t.descricao}
+                        </td>
+                        <td className="px-5 py-4 font-mono text-xs text-slate-400">
+                          {t.referencia}
+                        </td>
+                        <td className="px-5 py-4 text-slate-500">{t.data}</td>
+                        <td className="px-5 py-4">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                              t.tipo === "Receita"
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-rose-50 text-rose-700"
+                            }`}
+                          >
+                            {t.tipo}
+                          </span>
+                        </td>
+                        <td
+                          className={`px-5 py-4 font-semibold ${
+                            t.valor > 0
+                              ? "text-emerald-700"
+                              : "text-rose-600"
+                          }`}
+                        >
+                          {formatarMoeda(t.valor)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </>
+        )}
+
+        {aba === "Acompanhamento" && (
+          <>
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">
+                  Operação e experiência do hóspede
+                </p>
+                <h3 className="mt-1 text-xl font-bold text-slate-900">
+                  Acompanhamento operacional
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Solicitações, reclamações, ocorrências e sincronizações
+                  recebidas dos sistemas do hotel.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() =>
+                    setAtualizacaoAcompanhamento((valor) => valor + 1)
+                  }
+                  disabled={carregandoAcompanhamento}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  {carregandoAcompanhamento ? "Atualizando..." : "↻ Atualizar"}
+                </button>
+              </div>
+            </div>
+
+            {erroAcompanhamento && (
+              <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <p className="font-semibold">
+                  Não foi possível carregar o acompanhamento.
+                </p>
+                <p className="mt-1">{erroAcompanhamento}</p>
+                <p className="mt-2 text-xs">
+                  Verifique se o arquivo da API está em{" "}
+                  <code className="rounded bg-amber-100 px-1">
+                    src/app/api/relatorios/acompanhamento/route.js
+                  </code>{" "}
+                  e se o servidor Next.js foi reiniciado após a criação da rota.
+                </p>
+              </div>
+            )}
+
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                {
+                  titulo: "Solicitações",
+                  valor: carregandoAcompanhamento
+                    ? "..."
+                    : totalSolicitacoesAcompanhamento,
+                  detalhe: "Registros recebidos",
+                  icone: "◷",
+                },
+                {
+                  titulo: "Reclamações",
+                  valor: carregandoAcompanhamento
+                    ? "..."
+                    : totalReclamacoesAcompanhamento,
+                  detalhe: "Registros recebidos",
+                  icone: "⚑",
+                },
+                {
+                  titulo: "Ocorrências",
+                  valor: carregandoAcompanhamento
+                    ? "..."
+                    : totalOcorrenciasAcompanhamento,
+                  detalhe: "Registros recebidos",
+                  icone: "!",
+                },
+                {
+                  titulo: "Pendências",
+                  valor: carregandoAcompanhamento
+                    ? "..."
+                    : registrosPendentesAcompanhamento,
+                  detalhe: "Abertas, aguardando ou em andamento",
+                  icone: "⌛",
+                },
+              ].map((item) => (
+                <article
+                  key={item.titulo}
+                  className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
+                >
+                  <div className="mb-5 flex items-center justify-between">
+                    <p className="text-xs font-medium text-slate-500">
+                      {item.titulo}
+                    </p>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-sm font-bold text-cyan-700">
+                      {item.icone}
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold tracking-tight text-slate-900">
+                    {item.valor}
+                  </p>
+                  <p className="mt-2 text-xs text-slate-400">
+                    {item.detalhe}
+                  </p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mb-6 grid grid-cols-1 gap-5 xl:grid-cols-3">
+              <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+                <h4 className="font-bold text-slate-900">Volume por tipo</h4>
+                <p className="mt-1 text-xs text-slate-400">
+                  Quantidade de registros no banco
+                </p>
+
+                <div className="mt-6 space-y-5">
+                  {[
+                    {
+                      nome: "Solicitações",
+                      total: totalSolicitacoesAcompanhamento,
+                    },
+                    {
+                      nome: "Reclamações",
+                      total: totalReclamacoesAcompanhamento,
+                    },
+                    {
+                      nome: "Ocorrências",
+                      total: totalOcorrenciasAcompanhamento,
+                    },
+                  ].map((item) => {
+                    const percentual =
+                      totalRegistrosAcompanhamento > 0
+                        ? (item.total / totalRegistrosAcompanhamento) * 100
+                        : 0;
+
+                    return (
+                      <div key={item.nome}>
+                        <div className="mb-2 flex justify-between text-xs">
+                          <span className="font-medium text-slate-600">
+                            {item.nome}
+                          </span>
+                          <span className="font-bold text-slate-800">
+                            {item.total}
+                          </span>
+                        </div>
+
+                        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-blue-700 to-cyan-400"
+                            style={{ width: `${percentual}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {totalRegistrosAcompanhamento === 0 &&
+                    !carregandoAcompanhamento && (
+                      <p className="text-xs text-slate-400">
+                        Ainda não há registros para calcular a distribuição.
+                      </p>
+                    )}
+                </div>
+              </article>
+
+              <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm xl:col-span-2">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <h4 className="font-bold text-slate-900">
+                      Integrações de dados
+                    </h4>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Histórico de recebimento dos sistemas externos
+                    </p>
+                  </div>
+
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-semibold text-slate-600">
+                    {acompanhamento?.sincronizacoes.length ?? 0} sincronizações
+                  </span>
+                </div>
+
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full min-w-[560px] text-left">
+                    <thead>
+                      <tr className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400">
+                        <th className="px-3 py-3">Sistema</th>
+                        <th className="px-3 py-3">Entidade</th>
+                        <th className="px-3 py-3">Recebidos</th>
+                        <th className="px-3 py-3">Importados</th>
+                        <th className="px-3 py-3">Status</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {(acompanhamento?.sincronizacoes ?? [])
+                        .slice(0, 5)
+                        .map((sync) => (
+                          <tr
+                            key={sync.id}
+                            className="border-t border-slate-100 text-xs"
+                          >
+                            <td className="px-3 py-3 font-semibold text-slate-700">
+                              {sync.sistemaOrigem}
+                            </td>
+                            <td className="px-3 py-3 text-slate-500">
+                              {sync.entidade}
+                            </td>
+                            <td className="px-3 py-3 text-slate-500">
+                              {sync.registrosRecebidos}
+                            </td>
+                            <td className="px-3 py-3 text-slate-500">
+                              {sync.registrosImportados}
+                            </td>
+                            <td className="px-3 py-3">
+                              <span
+                                className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
+                                  sync.status.toLowerCase().includes("erro") ||
+                                  sync.status.toLowerCase().includes("falh")
+                                    ? "bg-rose-50 text-rose-700"
+                                    : sync.status
+                                        .toLowerCase()
+                                        .includes("sucesso") ||
+                                      sync.status
+                                        .toLowerCase()
+                                        .includes("conclu")
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : "bg-amber-50 text-amber-700"
+                                }`}
+                              >
+                                {sync.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+
+                  {(acompanhamento?.sincronizacoes.length ?? 0) === 0 && (
+                    <p className="p-6 text-center text-xs text-slate-400">
+                      Nenhuma sincronização registrada até o momento.
+                    </p>
+                  )}
+                </div>
+              </article>
+            </div>
+
+            <article className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-5">
+                <div>
+                  <h4 className="font-bold text-slate-900">
+                    Registros operacionais
+                  </h4>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {registrosAcompanhamentoFiltrados.length} de{" "}
+                    {totalRegistrosAcompanhamento} registros
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    value={filtroTipoAcompanhamento}
+                    onChange={(e) =>
+                      setFiltroTipoAcompanhamento(e.target.value)
+                    }
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-cyan-400"
+                  >
+                    <option>Todos</option>
+                    <option>Solicitação</option>
+                    <option>Reclamação</option>
+                    <option>Ocorrência</option>
+                  </select>
+
+                  <select
+                    value={filtroStatusAcompanhamento}
+                    onChange={(e) =>
+                      setFiltroStatusAcompanhamento(e.target.value)
+                    }
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-cyan-400"
+                  >
+                    <option>Todos</option>
+                    <option>aberta</option>
+                    <option>aberto</option>
+                    <option>pendente</option>
+                    <option>em andamento</option>
+                    <option>concluída</option>
+                    <option>resolvida</option>
+                    <option>encerrada</option>
+                  </select>
+
+                  <input
+                    value={buscaAcompanhamento}
+                    onChange={(e) =>
+                      setBuscaAcompanhamento(e.target.value)
+                    }
+                    placeholder="Buscar registro..."
+                    className="w-48 rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-cyan-400"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[950px] text-left">
+                  <thead>
+                    <tr className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400">
+                      <th className="px-4 py-3">Tipo</th>
+                      <th className="px-4 py-3">Categoria</th>
+                      <th className="px-4 py-3">Descrição</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Prioridade</th>
+                      <th className="px-4 py-3">Data</th>
+                      <th className="px-4 py-3">Quarto</th>
+                      <th className="px-4 py-3">Origem</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {registrosAcompanhamentoFiltrados.map((item) => (
+                      <tr
+                        key={`${item.tipo}-${item.id}`}
+                        className="border-t border-slate-100 text-xs hover:bg-slate-50"
+                      >
+                        <td className="px-4 py-3 font-semibold text-slate-700">
+                          {item.tipo}
+                        </td>
+                        <td className="px-4 py-3 text-slate-500">
+                          {item.categoria}
+                        </td>
+                        <td className="max-w-xs px-4 py-3 text-slate-500">
+                          {item.descricao}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-[10px] font-semibold text-cyan-800">
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-500">
+                          {item.prioridade}
+                        </td>
+                        <td className="px-4 py-3 text-slate-500">
+                          {formatarDataAcompanhamento(item.data)}
+                        </td>
+                        <td className="px-4 py-3 text-slate-500">
+                          {item.quarto}
+                        </td>
+                        <td className="px-4 py-3 text-slate-500">
+                          {item.origem}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {!carregandoAcompanhamento &&
+                  registrosAcompanhamentoFiltrados.length === 0 && (
+                    <p className="p-10 text-center text-sm text-slate-400">
+                      {totalRegistrosAcompanhamento === 0
+                        ? "Ainda não existem solicitações, reclamações ou ocorrências cadastradas."
+                        : "Nenhum registro corresponde aos filtros selecionados."}
+                    </p>
+                  )}
+
+                {carregandoAcompanhamento && (
+                  <p className="p-8 text-center text-sm text-slate-400">
+                    Carregando registros do banco de dados...
+                  </p>
+                )}
+              </div>
+            </article>
+          </>
+        )}
+
+        <footer className="mt-8 flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-5 text-[10px] text-slate-400">
+          <p>Grand Plaza · Central de Relatórios</p>
+          <p>
+            Intelligence Suite <span className="mx-2">·</span>
+            Indicadores parcialmente conectados ao banco de dados
+          </p>
+        </footer>
+      </section>
+    </main>
   );
 }
