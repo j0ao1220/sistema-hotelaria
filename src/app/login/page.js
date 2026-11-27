@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -24,22 +23,35 @@ export default function Login() {
     try {
       const supabase = createClient();
 
-      const { error: authError } =
+      const { data, error: authError } =
         await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim(),
           password: senha,
         });
 
       if (authError) {
-        setErro("E-mail ou senha inválidos.");
+        console.error(
+          "Erro de autenticação Supabase:",
+          authError
+        );
+
+        setErro(authError.message);
         return;
       }
 
+      console.log("Login realizado com sucesso:", data.user);
+
       router.replace("/dashboard");
       router.refresh();
+
     } catch (error) {
       console.error("Erro ao realizar login:", error);
-      setErro("Não foi possível realizar o login. Tente novamente.");
+
+      setErro(
+        error.message ||
+        "Não foi possível realizar o login. Tente novamente."
+      );
+
     } finally {
       setCarregando(false);
     }
@@ -47,8 +59,10 @@ export default function Login() {
 
   return (
     <main className={styles.container}>
+
       {/* LADO ESQUERDO */}
       <section className={styles.loginSide}>
+
         <header className={styles.header}>
           <div className={styles.logo}>
             <div className={styles.logoIcon}>▦</div>
@@ -68,6 +82,7 @@ export default function Login() {
         </header>
 
         <div className={styles.loginContent}>
+
           <h1>Bem-vindo ao Hotel Grand Plaza</h1>
 
           <p className={styles.description}>
@@ -79,6 +94,7 @@ export default function Login() {
             className={styles.form}
             onSubmit={handleLogin}
           >
+
             <label htmlFor="usuario">
               E-mail cadastrado
             </label>
@@ -104,6 +120,7 @@ export default function Login() {
             </div>
 
             <div className={styles.passwordInput}>
+
               <input
                 id="senha"
                 type={mostrarSenha ? "text" : "password"}
@@ -117,11 +134,18 @@ export default function Login() {
               <button
                 type="button"
                 className={styles.eye}
-                onClick={() => setMostrarSenha((visivel) => !visivel)}
-                aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                onClick={() =>
+                  setMostrarSenha((visivel) => !visivel)
+                }
+                aria-label={
+                  mostrarSenha
+                    ? "Ocultar senha"
+                    : "Mostrar senha"
+                }
               >
                 {mostrarSenha ? "◉" : "◎"}
               </button>
+
             </div>
 
             <label className={styles.checkbox}>
@@ -136,7 +160,14 @@ export default function Login() {
             </label>
 
             {erro && (
-              <p role="alert">
+              <p
+                role="alert"
+                style={{
+                  color: "#dc2626",
+                  fontSize: "14px",
+                  marginTop: "10px",
+                }}
+              >
                 {erro}
               </p>
             )}
@@ -150,10 +181,12 @@ export default function Login() {
                 ? "Entrando..."
                 : "Entrar no Sistema"}
             </button>
+
           </form>
 
           {/* AJUDA */}
           <div className={styles.helpBox}>
+
             <div className={styles.helpIcon}>
               i
             </div>
@@ -169,11 +202,14 @@ export default function Login() {
                 <strong>0800 000 0800</strong>.
               </p>
             </div>
+
           </div>
+
         </div>
 
         {/* RODAPÉ */}
         <footer className={styles.footer}>
+
           <span>
             Hotel Grand Plaza Admin © 2026
           </span>
@@ -181,14 +217,18 @@ export default function Login() {
           <span>Privacidade</span>
           <span>Termos de Uso</span>
           <span>Suporte</span>
+
         </footer>
+
       </section>
 
       {/* LADO DIREITO */}
       <section className={styles.imageSide}>
+
         <div className={styles.overlay}></div>
 
         <div className={styles.presentation}>
+
           <span className={styles.secure}>
             🛡 ACESSO SEGURO & CRIPTOGRAFADO
           </span>
@@ -206,6 +246,7 @@ export default function Login() {
 
           {/* BENEFÍCIOS */}
           <div className={styles.features}>
+
             <span>
               <b>✓</b>
               Gestão em tempo real
@@ -225,10 +266,12 @@ export default function Login() {
               <b>♧</b>
               Suporte 24/7
             </span>
+
           </div>
 
           {/* DEPOIMENTO */}
           <div className={styles.testimonial}>
+
             <div className={styles.stars}>
               ★★★★★
             </div>
@@ -240,6 +283,7 @@ export default function Login() {
             </p>
 
             <div className={styles.testimonialUser}>
+
               <div className={styles.avatar}>
                 DP
               </div>
@@ -253,10 +297,15 @@ export default function Login() {
                   Gerente de Operações
                 </small>
               </div>
+
             </div>
+
           </div>
+
         </div>
+
       </section>
+
     </main>
   );
 }
